@@ -1,0 +1,2 @@
+﻿section_name,csv,path_col,title_col,comma_separated_cols,group_col,image_col,show_cols,year_start_col,year_end_col,join_col1,join_col2,viz_url
+Buildings,data/2021 Building history map project.csv,URL,Name of building,Image links,Era,Image links,"Name of building, Architect, Former Names, Date built, Date demolished, Brief Description, Registry statusURL, Image links, Additional Resources",Date built,Date demolished,Name of building,NAME_LC,https://services1.arcgis.com/KNdRU5cN6ENqCTjk/arcgis/rest/services/CSU_Building_Footprints/FeatureServer
