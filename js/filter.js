@@ -33,16 +33,7 @@ class Filter_Manager {
     this.progress_interval;
    }
   init() {
-    var $this=this
-     //simulate progress - load up to 90%
-      var current_progress = 0;
-      this.progress_interval = setInterval(function() {
-          current_progress += 5;
-          $("#loader").css("width", current_progress + "%")
-          if (current_progress >= 90)
-              clearInterval($this.progress_interval);
 
-      }, 100);
     //
 
     this.load_csv(this.csv,this.process_csv)
@@ -165,15 +156,7 @@ class Filter_Manager {
         }
 
         //-------------
-        //hide loader
-        clearInterval($this.progress_interval)
-        $("#loader").css("width", 100 + "%")
-        setTimeout( function() {
 
-            $(".overlay").fadeOut("slow", function () {
-                $(this).css({display:"none",'background-color':"none"});
-            });
-        },300);
         after_filters();
     }
      generate_filters(_data){
