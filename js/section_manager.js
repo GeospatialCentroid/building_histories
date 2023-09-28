@@ -44,11 +44,10 @@ class Section_Manager {
             type='json'
         }
         //todo be sure to convert appropriately once loaded
-        console.log(slot)
         $.ajax({
             url: url,
             dataType: type,
-            slot: slot,
+            slot: slot, //pass through param
             success: function(_data) {
                 call_back(_data,this.slot)
             }
@@ -58,6 +57,8 @@ class Section_Manager {
 
     parse_data(_data){
         var $this = section_manager
+        // convert the csv file to json and create a subset of the records as needed
+       // strip any extraneous tabs
         $this.json_data= $.csv.toObjects(_data.replaceAll('\t', ''))
 
         for (var i=0; i< $this.json_data.length;i++){
@@ -100,21 +101,10 @@ class Section_Manager {
             comma_separated_cols:section.comma_separated_cols,
             title_col:section.title_col,
             year_end_col:section.year_end_col,
-            year_start_col:section.year_start_col
-//        csv:"https://docs.google.com/spreadsheets/d/e/2PACX-1vQmgyPcmSUv0wrEUCtMFEZIl1rabVGl_fh94hzH4hhONkii-BWIgQvNy0uQzAIfDnU4RfPtSXdJO6UJ/pub?gid=1117849997&single=true&output=csv",
-//        omit_result_item:["id","Hex Value for Category (CSV)","Category","lat,lng","Timestamp","Name","Email:"], // define which attributes not to show when a selection is made
-//        omit_filter_item:["id","Hex Value for Category (CSV)","lat,lng","Title","Timestamp","Name","Email:","Start date","End date","URL","Description","How this supports NASA's Year of Open Science goals"],
-//        path_col:"Link to Project",// the url to the dataset landing page
-//        popup_properties:["Title","Institution"],
-//        title_col:"Title",
-//        sub_title_col:"Institution",
-//        location:"lat,lng",
-//        date:["Start date","End date"],
-//        params:params['f'],
-//        comma_separated_col:["Category","Hex Value for Category (CSV)"],
-//        color:["Hex Value for Category (CSV)"],
-//        category:["Category"]
+            year_start_col:section.year_start_col,
+            json_data:section.all_data
             })
+
           }
           $this.check_all_section_completion()
     }
@@ -138,6 +128,8 @@ class Section_Manager {
                     $(this).css({display:"none",'background-color':"none"});
                 });
             },300);
+
+            $this.setup_interface()
         }
     }
 
@@ -173,12 +165,151 @@ class Section_Manager {
                         // inject all the properties form the geojson
                         all_data[i][p]=data_to_join.features[j].properties[p]
                     }
+                    // add the feature
+                    all_data[i].feature = data_to_join.features[j]
                     break
                }
             }
 
         }
     }
+    setup_interface(){
+        this.list_sections()
+        run_resize()
+        // if there is only one section, select it and move to results
+        if(this.json_data.length==1){
+
+            setTimeout(() => {
+               $("#section_0").trigger("click");
+                $("#arrow_0").trigger("click");
+            }, "100");
+
+        }
+    }
+    list_sections(){
+         var html= '<ul class="list-group"' +'">'
+         for (var i=0;i<this.json_data.length;i++){
+             var id = i
+             html += "<li class='list-group-item d-flex justify-content-between list-group-item-action' "
+//             html +=  "onmouseleave='filter_manager.hide_bounds()' "
+//             html+= "onmouseenter='filter_manager.show_bounds(\""+id+"\")' "
+                html+=">"
+             html+= this.json_data[i]["section_name"]
+            html+='<div class="float-end input-group-text"><span class="form-check"  onclick="section_manager.show_section('+id+')"><input class="form-check-input" type="checkbox" value="" id="section_'+id+'" ></span>'
+           html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='section_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
+//             if(this.get_match(id).usable_links.length>0){
+
+//             }
+             html+="</div>"
+
+             html+="</li>"
+        }
+        html+="</ul>"
+
+        $("#sections_view").html(html)
+
+    }
+    show_section(_id){
+        var $this=section_manager
+        var data = $this.get_match("section_id_"+_id)
+        var item_ids=[]
+         for (var i=0;i<data.length;i++){
+            if(data[i]?.feature){
+                item_ids.push(i);
+            }
+         }
+        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[_id].drawing_info.replaceAll('\n', ''))),false,false,item_ids)// todo update this "csv_geojson",false
+    }
+    list_results(_id){
+        //move to the results panel and list all the items
+        // each items visibility is stored in the filter manager - if showing
+        var $this = section_manager
+        var items_showing=this.json_data[_id].filter_manager.items_showing
+        $this.slide_position("results")
+         var data = $this.get_match('section_id_'+_id)
+         var html= '<ul class="list-group"' +'">'
+         for (var i=0;i<data.length;i++){
+             var showing=""
+             if($.inArray( i, items_showing)>-1){
+                //check if the item is showing
+                showing="checked"
+             }
+             html += "<li class='list-group-item d-flex justify-content-between list-group-item-action' >"
+             html+=data[i][$this.json_data[_id]["title_col"]]
+             if(data[i]?.feature){
+                html+='<span><div class="form-check"  onclick="section_manager.show_item('+_id+','+i+')"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+_id+'_'+i+'" ></div>'
+             }
+             html+="</span>"
+
+             html+="</li>"
+        }
+        html+="</ul>"
+
+        $("#results_view").html(html)
+    }
+    show_item(id,item_id){
+        var $this = section_manager
+        //toggle the layer but only show the specific item id
+        // note: we'll want to pass an array of ids to
+        layer_manager.toggle_layer("section_id_"+id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[id].drawing_info.replaceAll('\n', ''))),false,false,[item_id])
+    }
+    get_match(_id){
+        _id=_id.replaceAll('section_id_', '')
+        return this.json_data[_id].filter_manager.json_data
+    }
+    slide_position(panel_name){
+        var pos=0
+        var width=$("#side_bar").width()
+         var nav_text=""
+         this.panel_name=panel_name
+         switch(panel_name) {
+              case 'results':
+                pos=width*2
+                nav_text=LANG.NAV.BACK_BROWSE +" <i class='bi bi-chevron-left'></i>"
+                break;
+              case 'details':
+                    pos=width*3
+                    nav_text=LANG.NAV.BACK_RESULTS+" <i class='bi bi-chevron-left'></i>"
+                    break;
+              case 'layers':
+                    pos=width*4
+                    nav_text=LANG.NAV.BACK_RESULTS+" <i class='bi bi-chevron-left'></i>"
+                    break;
+              case 'sub_details':
+                    pos=width*5
+                    nav_text=LANG.NAV.BACK_LAYERS+" <i class='bi bi-chevron-left'></i>"
+                    break;
+              default:
+                //show the browse
+                nav_text="<i class='bi bi-chevron-right'></i> "+LANG.NAV.BACK_RESULTS
+                pos=0
+
+            }
+             $("#panels").animate({ scrollLeft: pos });
+             $("#nav").html(nav_text)
+
+             $("#search_tab").trigger("click")
+    }
+    go_back(){
+
+        // based on the panel position choose the movement
+        var go_to_panel=""
+        if(this.panel_name == 'results'){
+            go_to_panel = "browse"
+        }else if(this.panel_name == 'browse'){
+            go_to_panel = "results"
+        }else if(this.panel_name == 'details'){
+            go_to_panel = "results"
+        }else if(this.panel_name == 'layers'){
+            go_to_panel = "results"
+        }else if(this.panel_name == 'sub_details'){
+            go_to_panel = "layers"
+        }else{
+            go_to_panel = "results"
+        }
+        this.slide_position(go_to_panel)
+    }
+
 }
 
  

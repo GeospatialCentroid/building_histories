@@ -213,3 +213,17 @@ L.Layer.prototype.setInteractive = function (interactive) {
         L.DomUtil.removeClass(this._path, 'leaflet-interactive');
     }
 };
+//ref: https://stackoverflow.com/questions/45798387/how-to-make-markerclustergroup-cluster-polygons
+// Compute a polygon "center", use your favourite algorithm (centroid, etc.)
+L.Polygon.addInitHook(function() {
+  this._latlng = this._bounds.getCenter();
+});
+
+// Provide getLatLng and setLatLng methods for
+// Leaflet.markercluster to be able to cluster polygons.
+L.Polygon.include({
+  getLatLng: function() {
+    return this._latlng;
+  },
+  setLatLng: function() {} // Dummy method.
+});

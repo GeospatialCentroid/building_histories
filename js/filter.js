@@ -22,7 +22,7 @@ class Filter_Manager {
         this[p]=properties[p]
     }
     //keep reference to the the loaded spreadsheet data - source of filtering, selection and display
-    this.json_data;
+//    this.json_data;
     this.mode='data';
     // store the subset of results for use
     this.subset_data;
@@ -30,97 +30,83 @@ class Filter_Manager {
     this.page_num;
     // a dictionary of all the filters set
     this.filters={}
-    this.progress_interval;
+    this.items_showing=[]
    }
   init() {
 
+    process_csv(data,this)
+
     //
-
-    this.load_csv(this.csv,this.process_csv)
-    //
-    $("#search").focus();
-    $("#search_clear").click(function(){
-        $("#search").val("")
-    })
-    ///--------
-    $('input[type=radio][name=search_type]').change(function() {
-        $this.mode=this.value
-    });
-
-     $("#search_but").click(function(){
-        if($this.mode=="data"){
-           $this.add_filter(false,[$("#search").val()])
-           $this.filter()
-           //go to results
-           $this.slide_position("results")
-        }else{
-            $.get($this.place_url, { q: $("#search").val() }, function(data) {
-                try{
-                    $this.show_place_bounds(data[0].boundingbox)
-                    $("#search").val(data[0].display_name)
-                }catch(e){
-
-                }
-
-          })
-        }
-    })
-    $('#filter_bounds_checkbox').change(
-        function(){
-             filter_manager.update_bounds_search($(this))
-        }
-    );
-    //
-    //date search
-    $('#filter_date_checkbox').change(
-        function(){
-          filter_manager.delay_date_change();
-        }
-    );
-    var start =new Date("1800-01-01T00:00:00")
-    var end =new Date();
-    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
-    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
-
-    $("#filter_start_date").change( function() {
-        filter_manager.delay_date_change()
-
-    });
-    $("#filter_end_date").change( function() {
-      filter_manager.delay_date_change()
-    });
-
-    var values = [start.getTime(),end.getTime()]
-    $("#filter_date .filter_slider_box").slider({
-        range: true,
-        min: values[0],
-        max: values[1],
-        values:values,
-        slide: function( event, ui ) {
-
-           $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
-           $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
-           filter_manager.delay_date_change()
-
-     }
-    })
+//    $("#search").focus();
+//    $("#search_clear").click(function(){
+//        $("#search").val("")
+//    })
+//    ///--------
+//    $('input[type=radio][name=search_type]').change(function() {
+//        $this.mode=this.value
+//    });
+//
+//     $("#search_but").click(function(){
+//        if($this.mode=="data"){
+//           $this.add_filter(false,[$("#search").val()])
+//           $this.filter()
+//           //go to results
+//           $this.slide_position("results")
+//        }else{
+//            $.get($this.place_url, { q: $("#search").val() }, function(data) {
+//                try{
+//                    $this.show_place_bounds(data[0].boundingbox)
+//                    $("#search").val(data[0].display_name)
+//                }catch(e){
+//
+//                }
+//
+//          })
+//        }
+//    })
+//    $('#filter_bounds_checkbox').change(
+//        function(){
+//             filter_manager.update_bounds_search($(this))
+//        }
+//    );
+//    //
+//    //date search
+//    $('#filter_date_checkbox').change(
+//        function(){
+//          filter_manager.delay_date_change();
+//        }
+//    );
+//    var start =new Date("1800-01-01T00:00:00")
+//    var end =new Date();
+//    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
+//    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
+//
+//    $("#filter_start_date").change( function() {
+//        filter_manager.delay_date_change()
+//
+//    });
+//    $("#filter_end_date").change( function() {
+//      filter_manager.delay_date_change()
+//    });
+//
+//    var values = [start.getTime(),end.getTime()]
+//    $("#filter_date .filter_slider_box").slider({
+//        range: true,
+//        min: values[0],
+//        max: values[1],
+//        values:values,
+//        slide: function( event, ui ) {
+//
+//           $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
+//           $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
+//           filter_manager.delay_date_change()
+//
+//     }
+//    })
   }
-   load_csv(file_name,func){
-        var $this=this
-        $.ajax({
-            type: "GET",
-            url: file_name,
-            dataType: "text",
-            success: function(data) {
-                func(data,$this);
-            }
-         });
-    }
 
-     process_csv(data,$this){
-        // convert the csv file to json and create a subset of the records as needed
-       // strip any extraneous tabs
-       $this.json_data= $.csv.toObjects(data.replaceAll('\t', ''))
+     process_csv($this){
+
 
        if($this?.include_col){
         var temp_json=[]
@@ -132,7 +118,7 @@ class Filter_Manager {
          }
          $this.json_data = temp_json
        }
-       //account for comma separated columns, to be treated as separed values
+       //account for comma separated columns, to be treated as separate values
         if($this?.comma_separated_col){
             for (var i=0;i<$this.json_data.length;i++){
                 for (var c in $this.comma_separated_col){
@@ -157,7 +143,7 @@ class Filter_Manager {
 
         //-------------
 
-        after_filters();
+//        after_filters();
     }
      generate_filters(_data){
         // create a list of all the unique values
@@ -884,58 +870,6 @@ class Filter_Manager {
     var win = window.open(match[this.path_col], '_blank');
   }
 
-  slide_position(panel_name){
-        var pos=0
-        var width=$("#side_bar").width()
-         var nav_text=""
-         this.panel_name=panel_name
-         switch(panel_name) {
-              case 'results':
-                pos=width
-                nav_text=LANG.NAV.BACK_BROWSE +" <i class='bi bi-chevron-left'></i>"
-                break;
-              case 'details':
-                    pos=width*2
-                    nav_text=LANG.NAV.BACK_RESULTS+" <i class='bi bi-chevron-left'></i>"
-                    break;
-              case 'layers':
-                    pos=width*3
-                    nav_text=LANG.NAV.BACK_RESULTS+" <i class='bi bi-chevron-left'></i>"
-                    break;
-              case 'sub_details':
-                    pos=width*4
-                    nav_text=LANG.NAV.BACK_LAYERS+" <i class='bi bi-chevron-left'></i>"
-                    break;
-              default:
-                //show the browse
-                nav_text="<i class='bi bi-chevron-right'></i> "+LANG.NAV.BACK_RESULTS
-                pos=0
-
-            }
-             $("#panels").animate({ scrollLeft: pos });
-             $("#nav").html(nav_text)
-
-             $("#search_tab").trigger("click")
-    }
-    go_back(){
-
-        // based on the panel position choose the movement
-        var go_to_panel=""
-        if(this.panel_name == 'results'){
-            go_to_panel = "browse"
-        }else if(this.panel_name == 'browse'){
-            go_to_panel = "results"
-        }else if(this.panel_name == 'details'){
-            go_to_panel = "results"
-        }else if(this.panel_name == 'layers'){
-            go_to_panel = "results"
-        }else if(this.panel_name == 'sub_details'){
-            go_to_panel = "layers"
-        }else{
-            go_to_panel = "results"
-        }
-        this.slide_position(go_to_panel)
-    }
 
    update_toggle_button(){
         //scan through the loaded layers

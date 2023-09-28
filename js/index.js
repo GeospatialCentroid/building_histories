@@ -48,6 +48,7 @@ function initialize_interface(){
    setup_map();
 
     //setup_filters()
+     analytics_manager = new Analytics_Manager();
 
     section_manager=new Section_Manager({config:"app.csv"})
     section_manager.init();
@@ -94,53 +95,33 @@ function setup_map(){
 
       layer_manager = new Layer_Manager({
         map:map_manager.map,
-        layers_list:params['l']
+        layers_list:params['l'],
+        service_method:services//loaded in html
       })
 
       layer_manager.add_basemap_control()
 
 }
-function setup_filters(){
-    filter_manager = new Filter_Manager({
-        csv:"https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8j9KmPpm_fwMVy8bIdSowQx40EP1cqvkG4JZEsvTSYXMYVmv73p_RHirS1gttOA/pub?gid=1308010111&single=true&output=csv",
-        omit_result_item:["id","usable_links","drawing_info_retrieve","drawing_info","column name","column field name","column types","column description","Local file name"], // define which attributes not to show when a selection is made
-        omit_filter_item:["id","Last Updated","Login required (y/n)","include","Date coverage","usable_links","Title","Description","Webpage","Download link","Web service","Local file name","Metadata link","column field name","column types","column description","No. Records","Date Accessed","Contact Name","Contact Phone","Contact Email","Has data download","Notes","bbox"],
-        path_col:"Webpage",// the url to the dataset landing page
-        title_col:"Title",
-        sub_title_col:"Organization",
-        params:params['f'],
-        table_data_col:["column name","column field name","column types","column description"],
-        table_manager: table_manager,
-        include_col:'include',// values with 'y' will show-up in list
-        comma_separated_col:['Keywords',"column name","Topic"],
-        bounds_col:'bbox',
-        place_url:'https://nominatim.openstreetmap.org/search?format=json',
-        viz_col:["Download link","Web service"],
-        download_link:"Download link"
-     })
 
-     // initialize this filtering system
-     filter_manager.init();
-}
-function after_filters(){
-
-   run_resize()
-    add_back_but_support();
-     analytics_manager = new Analytics_Manager();
-    //    disclaimer_manager.init();
-
-    //    download_manager.init();
-
-    init_tabs();
-    if ( layer_manager.layers_list){
-         for (var i =0;i<layer_manager.layers_list.length;i++){
-            console.log(layer_manager.layers_list[i])
-            layer_manager.toggle_layer(layer_manager.layers_list[i].id,i)
-        }
-    }
-
-
-}
+//function after_filters(){
+//
+//   run_resize()
+//    add_back_but_support();
+//
+//    //    disclaimer_manager.init();
+//
+//    //    download_manager.init();
+//
+//    init_tabs();
+//    if ( layer_manager.layers_list){
+//         for (var i =0;i<layer_manager.layers_list.length;i++){
+//            console.log(layer_manager.layers_list[i])
+//            layer_manager.toggle_layer(layer_manager.layers_list[i].id,i)
+//        }
+//    }
+//
+//
+//}
 
 
 function init_tabs(){
@@ -226,9 +207,9 @@ function run_resize(){
 
 
             // update paging
-            filter_manager.update_parent_toggle_buttons(".content_right")
-            filter_manager.update_parent_toggle_buttons("#details_panel")
-            filter_manager.update_toggle_button()
+//            filter_manager.update_parent_toggle_buttons(".content_right")
+//            filter_manager.update_parent_toggle_buttons("#details_panel")
+//            filter_manager.update_toggle_button()
             if(! DEBUGMODE){
                 $("#document .page_nav").hide()
             }else{
@@ -238,7 +219,7 @@ function run_resize(){
                 });
             }
             $("#content").show();
-             map_manager.map.invalidateSize()
+           map_manager.map.invalidateSize()
     },100)
         //update the height of the results area when a change occurs
         $('#side_header').bind('resize', function(){
@@ -250,7 +231,7 @@ function window_resize() {
          if( $("#data_table_wrapper").is(":visible")){
            data_table_height= $("#data_table_wrapper").height()
         }
-        var header_height=$("#header").outerHeight();
+        var header_height=$("#header").outerHeight()+20;
         var window_height= $(window).outerHeight()
         var window_width= $(window).width()
 
@@ -310,13 +291,15 @@ function window_resize() {
         // slide to position
          $("#panels").stop(true, true)
          // if we are on the search tab, make sure the viewable panel stays when adjusted
-        if("search_tab"==$("#tabs").find(".active").attr("id")){
-            filter_manager.slide_position(filter_manager.panel_name)
-        }
+//        if("search_tab"==$("#tabs").find(".active").attr("id")){
+//            filter_manager.slide_position(filter_manager.panel_name)
+//        }
 
 
  }
  function save_params(){
+     console.log("We're not saving anything yet")
+     return
     // access the managers and store the info URL sharing
 
     var p = "?f="+encodeURIComponent(rison.encode(filter_manager.filters))

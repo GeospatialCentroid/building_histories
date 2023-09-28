@@ -631,13 +631,14 @@ class Map_Manager {
         }
 
         var zoom_level = this.map.getBoundsZoom(bounds)
+        console.log("The zoom level is ",zoom_level)
         //prevent zooming in too close
         if (zoom_level>19){
             this.map.flyTo(bounds.getCenter(),19);
         }else{
             this.map.flyToBounds(bounds);
         }
-         this.scroll_to_map()
+//         this.scroll_to_map()
      }
      zoom_rect(bounds){
         this.hide_highlight_rect()
@@ -661,7 +662,7 @@ class Map_Manager {
         // also update the table view if table bounds checked
         table_manager?.bounds_change_handler();
         //update the search results if search results checked
-        filter_manager?.bounds_change_handler();
+       // filter_manager?.bounds_change_handler();
     }
     move_map_pos(_params){
         var z = Number(_params['z'])

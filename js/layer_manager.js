@@ -20,13 +20,6 @@ class Layer_Manager {
     this.layers=[]
     this.image_layers=[]
 
-    this.service_method = []
-    $this=this
-//    // get the services to determine who to visualize the resources
-//    $.getJSON( "/services/", function( json ) {
-//        $this.service_method = json
-//     });
-    //
     if(typeof(this.layers_list)=="undefined"){
         this.layers_list=[]
     }
@@ -40,7 +33,6 @@ class Layer_Manager {
     //  only show the table for specific types
     this.table_types=["esriSFS","esriSMS","esriPMS","esriSLS","vector","GeoJSON","mapserver","feature layer"]
     //
-    var $this=this;
     // make the map layers sortable
     // make the map layers sortable
     $("#sortable_layers").sortable({
@@ -91,7 +83,7 @@ class Layer_Manager {
     this.set_layers_list()
 
   }
-  toggle_layer(_resource_id,z){
+  toggle_layer(_resource_id,type,drawing_info,url,z,item_ids){
 
     console.log("toggle_layer",_resource_id)
     var $this=layer_manager;
@@ -101,71 +93,54 @@ class Layer_Manager {
 //         return
 //    }
     // either add or hide a layer
-    var resource = filter_manager.get_match(_resource_id)
+    var resource = section_manager.get_match(_resource_id)
+    // todo we need to be able to know whether an item is visible or not
 
-    if($this.is_on_map(_resource_id)){
-        $this.remove_feature_layer(_resource_id);
-        $("#"+_resource_id+"_drag").remove();
-        $this.remove_legend(_resource_id);
-        filter_manager.update_parent_toggle_buttons(".content_right");
-
-        analytics_manager.track_event("side_bar","remove_layer","layer_id",_resource_id)
+    console.log("TOGGLE",$this.is_on_map(_resource_id) , item_ids==false)
+    if($this.is_on_map(_resource_id) && !item_ids){
+      $this.remove_feature_layer(_resource_id);
+//        $("#"+_resource_id+"_drag").remove();
+//        $this.remove_legend(_resource_id);
+//        filter_manager.update_parent_toggle_buttons(".content_right");
+//
+//        analytics_manager.track_event("side_bar","remove_layer","layer_id",_resource_id)
         return
     }
 
-    if (resource.usable_links.length>0 ){
-
-            // choose the first one for now todo make this more intelligent
-            var usable_link = resource.usable_links[0]
-            if(!resource?.drawing_info && !resource.drawing_info_retrieve && resource.usable_links[0][1].name!="GeoJSON"){
-                 // store a variable indicating that we attempted to get the
-                 resource.drawing_info_retrieve=true
-
-                 filter_manager.load_json(usable_link[0]+"?f=json",this.drawing_info_include,resource)
-                 return
-            }
-
-            $this.add_layer(_resource_id,usable_link[0],resource["drawing_info"],z,usable_link[1]["ref"],usable_link[1]["name"])
-
-            $this.add_to_map_tab(_resource_id,z);
-            filter_manager.update_parent_toggle_buttons(".content_right");
-
-            //analytics_manager.track_event("side_bar","add_layer","layer_id",_resource_id)
-        }else{
-            console_log("WE NO NOT KNOW HOW TO HANDLE THIS DATA LAYER!!!")
-        }
-  }
-  drawing_info_include(data,resource){
-    if(data?.drawingInfo){
-       resource.drawing_info = data.drawingInfo
-        layer_manager.toggle_layer(resource.id)
-    }
+     $this.add_layer(_resource_id,type,drawing_info,url,z,item_ids)
 
   }
- set_usable_links(resource){
-    //find the link in the array of links
-    resource.usable_links=[]
-    for (var l in filter_manager["viz_col"]){
-        //check if it's an acceptable format
-        if(resource[filter_manager["viz_col"][l]]!=""){
-            var link = resource[filter_manager["viz_col"][l]]
-            for (var s in services){
-                 // look through the second slot of each type
-                 if(typeof(link) !="undefined" && services[s]?.pattern){
-                     for (var p in services[s].pattern){
-
-                        if(link.indexOf(services[s].pattern[p])>-1){
-                             resource.usable_links.push([link,services[s]])
-                        }
-                     }
-              }
-            }
-
-
-
-        }
-    }
-  }
+//  drawing_info_include(data,resource){
+//    if(data?.drawingInfo){
+//       resource.drawing_info = data.drawingInfo
+//        layer_manager.toggle_layer(resource.id)
+//    }
+//
+//  }
+// set_usable_links(resource){
+//    //find the link in the array of links
+//    resource.usable_links=[]
+//    for (var l in filter_manager["viz_col"]){
+//        //check if it's an acceptable format
+//        if(resource[filter_manager["viz_col"][l]]!=""){
+//            var link = resource[filter_manager["viz_col"][l]]
+//            for (var s in services){
+//                 // look through the second slot of each type
+//                 if(typeof(link) !="undefined" && services[s]?.pattern){
+//                     for (var p in services[s].pattern){
+//
+//                        if(link.indexOf(services[s].pattern[p])>-1){
+//                             resource.usable_links.push([link,services[s]])
+//                        }
+//                     }
+//              }
+//            }
+//
+//
+//
+//        }
+//    }
+//  }
     add_to_map_tab(_resource_id,_z){
         var $this = this;
         // use this.layers[] for reference since filter_manager can change with filter response.
@@ -415,24 +390,23 @@ class Layer_Manager {
         return false;
     }
   }
-
     get_service_method(r){
-        for (var i=0;i<services.length;i++){
-               if (r==services[i].ref){
-                    return services[i]
+        for (var i=0;i<this.service_method.length;i++){
+               if (r==this.service_method[i].ref){
+                    return this.service_method[i]
                }
         }
     }
 
-  add_layer(_resource_id,url,_drawing_info,_z,service_type,_type){
+  add_layer(_resource_id,_type,_drawing_info,url,_z,item_ids){
 
-    console_log("Adding",_resource_id,url,_drawing_info,_z,service_type)
+    console_log("Adding",_resource_id,url,_z,_drawing_info,_type)
     var $this=this
     var update_url=false
     // create layer at pane
 
-    var resource = filter_manager.get_match(_resource_id)
-    console.log(url)
+    var resource = section_manager.get_match(_resource_id)
+    console.log("The url is",url)
 
     var layer_options = this.get_layer_options(_resource_id,url,_drawing_info)
 
@@ -444,11 +418,12 @@ class Layer_Manager {
           _z= this.layers.length
           update_url=true
     }
+    console.log("created pane",this.map.getPane(_resource_id).style)
     this.map.getPane(_resource_id).style.zIndex = _z+100;
 
-    var service_method = this.get_service_method(service_type)
-
-    console_log(layer_options.url)
+    var service_method = this.get_service_method(_type)
+    console.log("service_method",service_method,_type)
+    console.log(layer_options.url)
     //todo attempt overcoming cors
 //     layer_options.url='http://localhost:8000/sr/'+encodeURIComponent(layer_options.url)
      //check for a legend
@@ -526,6 +501,12 @@ class Layer_Manager {
       }else if (service_method._method=="csv"){
            var layer_obj = L.layerGroup();
            this.load_tabular_data(url,layer_obj,_resource_id);
+
+      }else if (service_method._method=="csv_geojson"){
+            //todo only create this layer if it doesn't yet exist
+
+           var layer_obj = L.featureGroup();
+           this.show_csv_geojson_data(layer_obj,_resource_id,item_ids);
 
       }else{
         console_log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
@@ -619,58 +600,20 @@ class Layer_Manager {
   load_ajax(url,layer_obj,_resource_id){
     var $this = this
 
-    // custom points
-    var layer_options ={}
-    layer_options.color="#ffffff";
-    layer_options.fillColor="#0290ce";
-    layer_options.weight=1;
-    var resource_marker_class = "_marker_class"+_resource_id
-
-    $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
-
+    $this.create_style_class(_resource_id)
     console_log("AJAX",url)
-
-
     $.ajax({
             dataType: "json",
             url: url,
             success: function(data) {
 
-                     console_log("AJAX","Loaded")
+                 console_log("AJAX","Loaded")
                  var markers = L.markerClusterGroup();
                  var unique_id=0;
                 L["geoJSON"](data,{
 
                     onEachFeature: function(feature, layer){
-
-                        var style = {}
-                        if(feature.properties?.color){
-                            style.fillColor= feature.properties.color
-                            style.color= feature.properties.color
-                             style.opacity= 0
-                        }
-                        // if we don't have an id, add one artificially called '_id'
-                        // be sure to exclude this from export
-                        if (!feature.properties?.id){
-                            feature.properties._id=unique_id++
-                        }else{
-                            feature.properties._id = feature.properties.id
-                        }
-                        var geo =L.geoJSON(feature, {pane: _resource_id, style: style,
-                            pointToLayer: function(feature, latlng) {
-                                return L.marker(latlng, {
-                                    icon: map_manager.get_marker_icon(resource_marker_class)
-                                  });
-                            },
-                        })
-                        // force a layer id for access
-                        geo._leaflet_id = feature.id;
-
-
-                         //temp add service options
-                         layer_obj.service= {options:{url:url}}
-                         geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
-                         markers.addLayer(geo);
+                         markers.addLayer($this.create_geo_feature(feature,_resource_id,layer_obj, layer,url,unique_id++));
                     }
                 })
                 layer_obj.addLayer(markers)
@@ -693,6 +636,48 @@ class Layer_Manager {
 //                // show load error
 //             }
         });
+  }
+  create_style_class(_resource_id){
+    // custom points
+    var layer_options ={}
+    layer_options.color="#ffffff";
+    layer_options.fillColor="#0290ce";
+    layer_options.weight=1;
+    var resource_marker_class = "_marker_class"+_resource_id
+
+    $("<style type='text/css'> ."+resource_marker_class+"{ border: "+layer_options.weight+"px solid "+layer_options.color+"; background-color:"+layer_options.fillColor+";} </style>").appendTo("head");
+
+  }
+  create_geo_feature(feature,_resource_id,layer_obj, layer,url,unique_id){
+    var $this = this
+
+    var style = {}
+    if(feature.properties?.color){
+        style.fillColor= feature.properties.color
+        style.color= feature.properties.color
+         style.opacity= 0
+    }
+    // if we don't have an id, add one artificially called '_id'
+    // be sure to exclude this from export
+    if (!feature.properties?.id){
+        feature.properties._id=unique_id
+    }else{
+        feature.properties._id = feature.properties.id
+    }
+    var geo =L.geoJSON(feature, {pane: _resource_id, style: style,
+        pointToLayer: function(feature, latlng) {
+            return L.marker(latlng, {
+                icon: map_manager.get_marker_icon(resource_marker_class)
+              });
+        },
+    })
+    // force a layer id for access
+    geo._leaflet_id = feature.id;
+
+     //temp add service options
+     layer_obj.service= {options:{url:url}}
+     geo.on('click', function(e) { $this.layer_click(e,_resource_id) });
+     return geo
   }
   show_bounds(b){
     map_manager.show_copy_link(b.getWest(),b.getSouth(),b.getEast(),b.getNorth())
@@ -892,10 +877,54 @@ class Layer_Manager {
     analytics_manager.track_event("map_tab","show_table","layer_id",_layer_id)
 
   }
+  show_csv_geojson_data(layer_obj,_resource_id,item_ids){
+  // the following creates a csv file which includes geojson features
+  // only rows with features can be mapped
+  // each item added should only be done so once and an array will track the visible items
+  // the showing/hiding of items can happen in several ways
+  // showing
+  // 1. selecting the checkbox for the entire section will show all the features
+  // 2. Selecting a group checkbox will show all the features in the group.
+  // 3. selecting an individual item (with/checkbox) will show individual item
+  // hiding
+  // Unchecking any checkbox will take all the ids associated with it and remove them from the map
+    var items_showing=section_manager.json_data[_resource_id.replaceAll('section_id_', '')].filter_manager.items_showing
+    console.log(section_manager.json_data[_resource_id.replaceAll('section_id_', '')].filter_manager)
+    console.log(item_ids)
+    var $this=this
+    $this.create_style_class(_resource_id)
+    var data = section_manager.get_match(_resource_id)
+//     var markers = L.markerClusterGroup();
+     var unique_id=0;
+     for (var i=0;i<item_ids.length;i++){
+
+        var j=item_ids[i]
+
+        if ($.inArray( j, items_showing)==-1){
+            layer_obj.addLayer($this.create_geo_feature(data[j].feature,_resource_id,layer_obj, false, false,unique_id++));
+            items_showing.push(j)
+        }else{
+            console.log("This layer is already visible")
+            console.log(layer_obj.getLayers())
+            layer_obj.getLayers().forEach(function(layer) {
+
+                console.log(layer)
+                //map.removeLayer(layer);
+              });
+        }
+
+     }
+    //layer_obj.addLayer(markers)
+    //map_manager.map_zoom_event(layer_obj.getBounds())
+    $this.map.fitBounds(layer_obj.getBounds());
+    layer_obj.data = data
+    layer_obj.addTo($this.map);
+  }
 
     //
     get_layer_select_html(_layer_id,_change_event,is_table,omit_selected){
-
+        console.log("todo get_layer_select_html")
+        return
         var html=""
         if(_change_event){
             html+="<span>"+LANG.IDENTIFY.IDENTIFY_SELECT_LAYER+"</span>"

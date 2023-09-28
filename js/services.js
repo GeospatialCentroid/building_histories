@@ -57,6 +57,12 @@ var services = [
 "pattern":["GeoJSON"]
 },
 {
+"name": "csv_geojson",
+"ref": "csv_geojson",
+"_class": null,
+"_method": "csv_geojson"
+},
+{
 "name": "GeoJSON_CORS",
 "ref": null,
 "_class": null,
