@@ -380,7 +380,7 @@ class Layer_Manager {
         return {"layer_obj":this.basemap_layer,"type":"basemap"}
 
      }
-
+        return false
   }
   is_on_map(_resource_id){
     var layer = this.get_layer_obj(_resource_id)
@@ -406,7 +406,7 @@ class Layer_Manager {
     // create layer at pane
 
     var resource = section_manager.get_match(_resource_id)
-    console.log("The url is",url)
+    console_log("The url is",url)
 
     var layer_options = this.get_layer_options(_resource_id,url,_drawing_info)
 
@@ -418,12 +418,12 @@ class Layer_Manager {
           _z= this.layers.length
           update_url=true
     }
-    console.log("created pane",this.map.getPane(_resource_id).style)
+    console_log("created pane",this.map.getPane(_resource_id).style)
     this.map.getPane(_resource_id).style.zIndex = _z+100;
 
     var service_method = this.get_service_method(_type)
-    console.log("service_method",service_method,_type)
-    console.log(layer_options.url)
+    console_log("service_method",service_method,_type)
+    console_log(layer_options.url)
     //todo attempt overcoming cors
 //     layer_options.url='http://localhost:8000/sr/'+encodeURIComponent(layer_options.url)
      //check for a legend
@@ -503,10 +503,22 @@ class Layer_Manager {
            this.load_tabular_data(url,layer_obj,_resource_id);
 
       }else if (service_method._method=="csv_geojson"){
-            //todo only create this layer if it doesn't yet exist
 
-           var layer_obj = L.featureGroup();
-           this.show_csv_geojson_data(layer_obj,_resource_id,item_ids);
+             // check if we have a layer obj already
+          var layer_obj=$this.get_layer_obj(_resource_id);
+
+
+          if(layer_obj){
+              //notice layer_ob.layer_obj
+             this.show_csv_geojson_data(layer_obj.layer_obj,_resource_id,item_ids);
+             return
+          }else{
+             // only create this layer if it doesn't yet exist
+              layer_obj = L.featureGroup();
+              this.show_csv_geojson_data(layer_obj,_resource_id,item_ids);
+          }
+
+
 
       }else{
         console_log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
@@ -556,7 +568,7 @@ class Layer_Manager {
      if (update_url){
            this.set_layers_list()
      }
-
+     // for ease of access store a layer_id
      layer_obj.layer_id=_resource_id
      $("."+_resource_id+"_toggle").addClass("progress-bar-striped active progress-bar-animated")
      // update the parent record to show loaded
@@ -878,6 +890,10 @@ class Layer_Manager {
 
   }
   show_csv_geojson_data(layer_obj,_resource_id,item_ids){
+      var $this=this
+    if(!$this.map.hasLayer(layer_obj)){
+        layer_obj.addTo($this.map);
+    }
   // the following creates a csv file which includes geojson features
   // only rows with features can be mapped
   // each item added should only be done so once and an array will track the visible items
@@ -888,37 +904,40 @@ class Layer_Manager {
   // 3. selecting an individual item (with/checkbox) will show individual item
   // hiding
   // Unchecking any checkbox will take all the ids associated with it and remove them from the map
+
     var items_showing=section_manager.json_data[_resource_id.replaceAll('section_id_', '')].filter_manager.items_showing
-    console.log(section_manager.json_data[_resource_id.replaceAll('section_id_', '')].filter_manager)
-    console.log(item_ids)
-    var $this=this
     $this.create_style_class(_resource_id)
     var data = section_manager.get_match(_resource_id)
-//     var markers = L.markerClusterGroup();
+    //     var markers = L.markerClusterGroup();
      var unique_id=0;
      for (var i=0;i<item_ids.length;i++){
 
         var j=item_ids[i]
+        var index =$.inArray( j, items_showing)
+        if (index==-1){
 
-        if ($.inArray( j, items_showing)==-1){
-            layer_obj.addLayer($this.create_geo_feature(data[j].feature,_resource_id,layer_obj, false, false,unique_id++));
+            layer_obj.addLayer($this.create_geo_feature(data[j].feature,_resource_id,layer_obj, false, false,unique_id++).bindTooltip(data[j].feature.properties[Object.keys(data[j].feature.properties)[0]]));
             items_showing.push(j)
         }else{
-            console.log("This layer is already visible")
-            console.log(layer_obj.getLayers())
-            layer_obj.getLayers().forEach(function(layer) {
+            try{
+                // it's possible a shape Path errors-out when trying to remove, just try to remove it
+                layer_obj.removeLayer(data[j].feature.id);// note: we need to use the internal id number
+            }catch(error){
 
-                console.log(layer)
-                //map.removeLayer(layer);
-              });
+            }
+
+            items_showing.splice(index,1)
         }
 
      }
     //layer_obj.addLayer(markers)
     //map_manager.map_zoom_event(layer_obj.getBounds())
-    $this.map.fitBounds(layer_obj.getBounds());
+    if(items_showing.length>0){
+        $this.map.fitBounds(layer_obj.getBounds());
+    }
+
     layer_obj.data = data
-    layer_obj.addTo($this.map);
+
   }
 
     //

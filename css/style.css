@@ -108,6 +108,7 @@ warning: #ff1b28
 }
 #tabs{
     margin-left:3px;
+    display:none;
 }
 .tabs_line{
     margin-top: -1px;
@@ -424,15 +425,23 @@ margin-left:-15px;
     max-height: 320px;
     overflow: auto;
 }
+.leaflet-popup-content-wrapper{
+    width:245px;
+}
+.popup_image{
+     width:180px;
+}
 #popup_scroll{
     max-height: 205px;
     overflow: auto;
+
 }
 #popup_control_table{
     width:100%;
 }
 .leaflet-popup-content{
-    width: 200px;
+    width: 230px;
+    margin: 5px 5px 5px 5px;
 }
 
 .leaflet-container{

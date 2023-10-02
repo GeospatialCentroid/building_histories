@@ -59,8 +59,7 @@ class Section_Manager {
         var $this = section_manager
         // convert the csv file to json and create a subset of the records as needed
        // strip any extraneous tabs
-        $this.json_data= $.csv.toObjects(_data.replaceAll('\t', ''))
-
+       $this.json_data= $.csv.toObjects(_data.replaceAll('\t', ''))
         for (var i=0; i< $this.json_data.length;i++){
              // split files by semi-colon
             $this.json_data[i].data= $this.json_data[i].data.split(";")
@@ -145,7 +144,10 @@ class Section_Manager {
                 var type=data_to_join[1]
                 if(type=="geojson"){
                     this.join_geojson(section.all_data,data_to_join.data,data_to_join[2],data_to_join[3])
-
+                    var show_cols=section.show_cols.split(",").map(function(item) {
+                          return item.trim();
+                        });
+                    this.update_geojson_properties(section.all_data,show_cols,section?.image_col)
                 }
                 //console.log("second data",section.data[j].data,section.data[j][1])
 
@@ -160,15 +162,44 @@ class Section_Manager {
             for (var j=0;j<data_to_join.features.length;j++){
                 //console.log(data_to_join.features[j].properties[right_join_col],"values")
                if(left_join_val == data_to_join.features[j].properties[right_join_col]){
-
-                     for (var p in data_to_join.features[j].properties){
-                        // inject all the properties form the geojson
+                    for (var p in data_to_join.features[j].properties){
+                        // inject all the properties from the geojson
                         all_data[i][p]=data_to_join.features[j].properties[p]
                     }
-                    // add the feature
+                    // add the feature for ease of access
                     all_data[i].feature = data_to_join.features[j]
+
                     break
                }
+            }
+
+        }
+    }
+    update_geojson_properties(all_data,show_cols,image_col){
+        // we really need the details stored in the properties
+        for (var i=0;i<all_data.length;i++){
+            var properties={}
+
+            for (var j=0;j<show_cols.length;j++){
+                // inject all the properties form the geojson
+
+
+               properties[show_cols[j]]=  all_data[i][show_cols[j]]
+            }
+            // and if there is an image col
+            if(image_col){
+                //first split on ;
+                var images = properties[image_col].split(";").map(function(item) {
+                  return item.trim();
+                });
+                var html_images =""
+                for(var img in images){
+                   html_images+=String(images[img]).image_text()
+                }
+                properties[image_col]=html_images
+               }
+            if(all_data[i]?.feature){
+                all_data[i].feature.properties=properties
             }
 
         }
@@ -194,9 +225,9 @@ class Section_Manager {
 //             html +=  "onmouseleave='filter_manager.hide_bounds()' "
 //             html+= "onmouseenter='filter_manager.show_bounds(\""+id+"\")' "
                 html+=">"
-             html+= this.json_data[i]["section_name"]
-            html+='<div class="float-end input-group-text"><span class="form-check"  onclick="section_manager.show_section('+id+')"><input class="form-check-input" type="checkbox" value="" id="section_'+id+'" ></span>'
-           html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='section_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
+                html+= this.json_data[i]["section_name"]
+                html+='<div class="float-end input-group-text"><span class="form-check"  onclick="section_manager.show_section('+id+')"><input class="form-check-input" type="checkbox" value="" id="section_'+id+'" ></span>'
+                html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='section_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
 //             if(this.get_match(id).usable_links.length>0){
 
 //             }

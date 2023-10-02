@@ -66,7 +66,13 @@ String.prototype.hyper_text=function(){
     }
     return this
 }
+String.prototype.image_text=function(){
 
+    if(this.startsWith("http")){
+        return "<img class='popup_image' src='"+this.toString()+"'>"
+    }
+    return this
+}
 //set via url params
 var DEBUGMODE=false
 console_log = (function (methods, undefined) {

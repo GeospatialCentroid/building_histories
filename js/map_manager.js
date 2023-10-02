@@ -339,16 +339,17 @@ class Map_Manager {
     }
 
     show_popup_details(_features){
-           console_log("show pop up details",_features)
+
            var $this =this
            var layer = this.get_selected_layer()
+           console.log("show pop up details",_features,layer,layer.type)
            if(!layer){
                 this.popup_close()
                 return
            }
            var layer_select_html="<span id='layer_select'>"+ this.show_layer_select(layer.id)+"</span>"
           // make sure at least one feature was identified.
-          var  html =layer_select_html
+          var  html =""//layer_select_html
           $this.features=_features
 
           if (typeof(_features)!="undefined" && _features.length > 0) {
