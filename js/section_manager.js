@@ -19,7 +19,7 @@ class Section_Manager {
         for (var p in properties){
             this[p]=properties[p]
         }
-        this.mode='data';
+
     }
     init() {
      this.load_data(this.config,"csv",this.parse_data)
@@ -258,18 +258,18 @@ class Section_Manager {
          }
         layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[_id].drawing_info.replaceAll('\n', ''))),false,false,item_ids)// todo update this "csv_geojson",false
     }
-    list_results(_id){
+    list_results(parent_id){
         var $this = section_manager
-        $this.showing_id=_id
+        $this.showing_id=parent_id
         $this.slide_position("results")
         //move to the results panel and list all the items
         // each items visibility is stored in the filter manager - if showing
 
-        var items_showing=this.json_data[_id].items_showing
-        var data = $this.get_match('section_id_'+_id)
+        var items_showing=$this.json_data[parent_id].items_showing
+        var data = $this.get_match('section_id_'+parent_id)
         var sort_dir=$('#list_sort').val()
-        var title_col=$this.json_data[_id]["title_col"]
-        var sorted_data= [...data]//Object.assign({}, data)
+        var title_col=$this.json_data[parent_id]["title_col"]
+        var sorted_data= [...data]
 
        if(sort_dir!=''){
            sorted_data= sorted_data.sort((a,b) => (a[title_col] > b[title_col] ) ? 1 : ((b[title_col]  > a[title_col] ) ? -1 : 0))
@@ -282,14 +282,16 @@ class Section_Manager {
 
          for (var i=0;i<sorted_data.length;i++){
              var showing=""
-             if($.inArray( i, items_showing)>-1){
+
+             if($.inArray( sorted_data[i]._id, items_showing)>-1){
                 //check if the item is showing
                 showing="checked"
              }
              html += "<li class='list-group-item d-flex justify-content-between list-group-item-action'>"
              if(sorted_data[i]?.feature){
-                 html+='<span style="cursor: pointer;" onclick="section_manager.zoom_item('+_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
-                 html+='<span><div class="form-check"  onclick="section_manager.show_item('+_id+','+sorted_data[i]._id+')"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+_id+'_'+sorted_data[i]._id+'" ></div>'
+
+                 html+='<span style="cursor: pointer;" onclick="section_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
+                 html+='<span><div class="form-check"  onclick="section_manager.show_item('+parent_id+','+sorted_data[i]._id+')"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
              }else{
                   html+=sorted_data[i][title_col]
              }
@@ -300,6 +302,11 @@ class Section_Manager {
         html+="</ul>"
 
         $("#results_view").html(html)
+        //
+        $('#result_wrapper').animate({
+                scrollTop: 0
+            }, 1000);
+
         run_resize()
     }
     show_item(_id,item_id){

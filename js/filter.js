@@ -175,25 +175,7 @@ class Filter_Manager {
 
 
     }
-    add_filter_watcher(){
-        var $this=this;
-        // watch at the filter list level
-        $('.filter_list').change( function() {
-           var id = $(this).attr('id')
-            // create a new list of selected values
-           var vals=[]
-           $(this).find(":checked").each(function() {
-                vals.push($(this).val())
 
-           })
-           if(vals.length==0){
-                vals=null
-           }
-           console_log("add_filter_watcher",$(this).attr('id'),vals)
-           $this.add_filter($(this).attr('id'),vals);
-           $this.filter()
-        });
-    }
     add_to_catalog(col,val){
         if(typeof(this.catalog[col])=="undefined"){
                this.catalog[col]=[val]
@@ -241,34 +223,7 @@ class Filter_Manager {
         return html
     }
 
-    add_filter(_id,value){
-        console_log("add_filter with a chip",_id,value)
-        if (_id ==false){
-            _id = LANG.SEARCH.CHIP_SUBMIT_BUT_LABEL
-            // add text to the search field
-            $("#search").val(value)
-        }
-        // remove the __ to get the true id
-        var id = _id.replaceAll("__", " ");
-        // set the filters value
-        this.filters[id]=value
-        console_log("And the filters are...",this.filters)
-        //create text for filter chip
-        var text_val=""
-        //for number range use dash - separator
-        if (value!=null){
-            if($.isNumeric(value[0]) && value.length<=2){
-                text_val=value[0]+" - "+value[1]
-            }else{
-                text_val=value.join(", ")
-            }
-        }
-        this.show_filter_selection(_id.replaceAll( " ", "__"),id+": "+text_val)
-        if (value==null){
-           this.remove_filter(_id)
-        }
 
-    }
      show_filter_selection(_id,text){
         // create chips with the selected property and values
         var obj =this
@@ -309,96 +264,7 @@ class Filter_Manager {
     remove_filter_selection(_id){
        $("#"+_id+"__chip").remove()
     }
-    filter(){
-        // create a subset of the items based on the set filters
-        var subset=[]
-        //loop though the items in the list
-        for (var i=0;i<this.json_data.length;i++){
 
-            // compare each to the filter set to create a subset
-            var meets_criteria=true; // a boolean to determine if the item should be included
-            var obj=this.json_data[i]
-            for (var a in this.filters){
-                if (a==LANG.SEARCH.CHIP_SUBMIT_BUT_LABEL){
-                    // if search term not found in both title and sub title
-//                    if(obj[this.title_col].indexOf(this.filters[a][0]) == - 1 &&  obj[this.sub_title_col].indexOf(this.filters[a][0])==-1){
-//                        meets_criteria=false
-//                    }
-                    // convert to string for search
-                    var obj_str = JSON.stringify(obj).toLowerCase();
-                    if(obj_str.indexOf(this.filters[a][0].toLowerCase() )==-1){
-                        meets_criteria=false
-                    }
-
-                }else if (a=='bounds'){
-                     if(obj?.[this['bounds_col']]){
-                         var b = obj[this['bounds_col']].split(',')
-                          var poly1 = turf.polygon([[
-                            [b[1],b[0]],
-                            [b[1],b[2]],
-                            [b[3],b[2]],
-                            [b[3],b[0]],
-                            [b[1],b[0]]
-                            ]])
-                          var b = layer_manager.map.getBounds()
-                          var poly2 = turf.polygon([[
-                          [b._southWest.lat,b._southWest.lng],
-                          [b._southWest.lat,b._northEast.lng],
-                          [b._northEast.lat,b._northEast.lng],
-                          [b._northEast.lat,b._southWest.lng],
-                           [b._southWest.lat,b._southWest.lng]
-                          ]])
-
-                          if (!turf.booleanIntersects(poly1, poly2)){
-                            meets_criteria=false
-                          }
-                    }else{
-                         // no coordinates
-                         meets_criteria=false
-                    }
-
-                }else if (a!='p'){
-                    if ($.isNumeric(this.filters[a][0])){
-                        //we are dealing with a numbers - check range
-                        if (obj[a]<this.filters[a][0] || obj[a]>this.filters[a][1]){
-                             meets_criteria=false
-                        }
-                    }else{
-                        // match the elements
-                        // make and exception for searching through array values
-                         if ($.isArray(obj[a])){
-                            // loop over the filters array checking if its in the object attribute array
-                            for(var j=0;j<this.filters[a].length;j++){
-                                 if ($.inArray(this.filters[a][j],obj[a])==-1){
-                                    meets_criteria=false
-                                 }
-                            }
-                         }else{
-                            if ($.inArray(obj[a],this.filters[a])==-1){
-                                meets_criteria=false
-                            }
-                         }
-                    }
-                }
-            }
-            if (meets_criteria==true){
-                    subset.push(obj)
-            }
-
-        }
-        this.populate_search(subset)
-        this.generate_filters(subset)
-        // be sure to set the filter_manager params for setting filters during menu regeneration
-
-        this.params=[this.filters]
-        console_log( "params were set",this.filters)
-        this.set_filters();
-        this.save_filter_params()
-
-        this.add_filter_watcher();
-
-        //this.slide_position("results");
-    }
 
 
 

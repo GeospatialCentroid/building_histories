@@ -50,8 +50,9 @@ function initialize_interface(){
 
     //setup_filters()
     analytics_manager = new Analytics_Manager();
-    filter_manager = new Filter_Manager();
+
     section_manager=new Section_Manager({config:"app.csv"})
+    filter_manager = new Filter_Manager({section_manager:section_manager});
     section_manager.init();
 }
 

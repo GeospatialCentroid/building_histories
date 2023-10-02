@@ -889,8 +889,9 @@ class Layer_Manager {
 
   }
   show_csv_geojson_data(layer_obj,_resource_id,item_ids){
-      var $this=this
+    var $this=this
     if(!$this.map.hasLayer(layer_obj)){
+        // only add the layer once
         layer_obj.addTo($this.map);
     }
   // the following creates a csv file which includes geojson features
