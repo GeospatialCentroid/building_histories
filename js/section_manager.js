@@ -158,6 +158,8 @@ class Section_Manager {
     join_geojson(all_data,data_to_join,left_join_col,right_join_col){
 
         for (var i=0;i<all_data.length;i++){
+            // inject and if for access
+            all_data[i]._id=i
             var left_join_val=all_data[i][left_join_col]
             for (var j=0;j<data_to_join.features.length;j++){
                 //console.log(data_to_join.features[j].properties[right_join_col],"values")
@@ -207,6 +209,7 @@ class Section_Manager {
     setup_interface(){
         this.list_sections()
         run_resize()
+        this.init_search_interface()
         // if there is only one section, select it and move to results
         if(this.json_data.length==1){
 
@@ -252,23 +255,39 @@ class Section_Manager {
         layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[_id].drawing_info.replaceAll('\n', ''))),false,false,item_ids)// todo update this "csv_geojson",false
     }
     list_results(_id){
+        var $this = section_manager
+        $this.showing_id=_id
+        $this.slide_position("results")
         //move to the results panel and list all the items
         // each items visibility is stored in the filter manager - if showing
-        var $this = section_manager
+
         var items_showing=this.json_data[_id].filter_manager.items_showing
-        $this.slide_position("results")
-         var data = $this.get_match('section_id_'+_id)
+        var data = $this.get_match('section_id_'+_id)
+        var sort_dir=$('#list_sort').val()
+        var title_col=$this.json_data[_id]["title_col"]
+        var sorted_data= [...data]//Object.assign({}, data)
+
+       if(sort_dir!=''){
+           sorted_data= sorted_data.sort((a,b) => (a[title_col] > b[title_col] ) ? 1 : ((b[title_col]  > a[title_col] ) ? -1 : 0))
+        }
+        if (sort_dir=='desc'){
+              sorted_data.reverse()
+        }
+
          var html= '<ul class="list-group"' +'">'
-         for (var i=0;i<data.length;i++){
+
+         for (var i=0;i<sorted_data.length;i++){
              var showing=""
              if($.inArray( i, items_showing)>-1){
                 //check if the item is showing
                 showing="checked"
              }
-             html += "<li class='list-group-item d-flex justify-content-between list-group-item-action' >"
-             html+=data[i][$this.json_data[_id]["title_col"]]
-             if(data[i]?.feature){
-                html+='<span><div class="form-check"  onclick="section_manager.show_item('+_id+','+i+')"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+_id+'_'+i+'" ></div>'
+             html += "<li class='list-group-item d-flex justify-content-between list-group-item-action'>"
+             if(sorted_data[i]?.feature){
+                 html+='<span style="cursor: pointer;" onclick="section_manager.zoom_item('+_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
+                 html+='<span><div class="form-check"  onclick="section_manager.show_item('+_id+','+sorted_data[i]._id+')"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+_id+'_'+sorted_data[i]._id+'" ></div>'
+             }else{
+                  html+=sorted_data[i][title_col]
              }
              html+="</span>"
 
@@ -277,12 +296,27 @@ class Section_Manager {
         html+="</ul>"
 
         $("#results_view").html(html)
+        run_resize()
     }
-    show_item(id,item_id){
+    show_item(_id,item_id){
         var $this = section_manager
         //toggle the layer but only show the specific item id
         // note: we'll want to pass an array of ids to
-        layer_manager.toggle_layer("section_id_"+id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[id].drawing_info.replaceAll('\n', ''))),false,false,[item_id])
+        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[_id].drawing_info.replaceAll('\n', ''))),false,false,[item_id])
+    }
+    zoom_item(_id,item_id){
+        var $this = section_manager
+          var data = $this.get_match('section_id_'+_id)
+            for (var i=0;i<data.length;i++){
+                if(item_id==data[i]._id){
+                    if(data[i]?.feature){
+                      map_manager.map_zoom_event(L.geoJSON(data[i].feature).getBounds())
+                    }
+
+                    break
+                }
+
+            }
     }
     get_match(_id){
         _id=_id.replaceAll('section_id_', '')
@@ -340,7 +374,81 @@ class Section_Manager {
         }
         this.slide_position(go_to_panel)
     }
+    init_search_interface(){
+    var $this=this
+    $('#list_sort').change(function() {
+       $this.list_results($this.showing_id)
+    });
 
+
+
+    $("#search").focus();
+    $("#search_clear").click(function(){
+        $("#search").val("")
+    })
+    ///--------
+    $('input[type=radio][name=search_type]').change(function() {
+        $this.mode=this.value
+    });
+
+     $("#search_but").click(function(){
+        if($this.mode=="data"){
+           $this.add_filter(false,[$("#search").val()])
+           $this.filter()
+           //go to results
+           $this.slide_position("results")
+        }else{
+            $.get($this.place_url, { q: $("#search").val() }, function(data) {
+                try{
+                    $this.show_place_bounds(data[0].boundingbox)
+                    $("#search").val(data[0].display_name)
+                }catch(e){
+
+                }
+
+          })
+        }
+    })
+//    $('#filter_bounds_checkbox').change(
+//        function(){
+//             filter_manager.update_bounds_search($(this))
+//        }
+//    );
+//    //
+//    //date search
+//    $('#filter_date_checkbox').change(
+//        function(){
+//          filter_manager.delay_date_change();
+//        }
+//    );
+//    var start =new Date("1800-01-01T00:00:00")
+//    var end =new Date();
+//    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
+//    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
+//
+//    $("#filter_start_date").change( function() {
+//        filter_manager.delay_date_change()
+//
+//    });
+//    $("#filter_end_date").change( function() {
+//      filter_manager.delay_date_change()
+//    });
+//
+//    var values = [start.getTime(),end.getTime()]
+//    $("#filter_date .filter_slider_box").slider({
+//        range: true,
+//        min: values[0],
+//        max: values[1],
+//        values:values,
+//        slide: function( event, ui ) {
+//
+//           $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
+//           $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
+//           filter_manager.delay_date_change()
+//
+//     }
+//    })
+    }
 }
 
  
