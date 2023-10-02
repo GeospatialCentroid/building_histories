@@ -19,6 +19,7 @@ class Section_Manager {
         for (var p in properties){
             this[p]=properties[p]
         }
+        this.mode='data';
     }
     init() {
      this.load_data(this.config,"csv",this.parse_data)
@@ -91,20 +92,25 @@ class Section_Manager {
             //todo create nav with section_name
             //todo pass variables from app.csv
 
-          section.filter_manager =  new Filter_Manager({
+//          section.filter_manager =  new Filter_Manager({
+//
+//            group_col:section.group_col,
+//            image_col:section.image_col,
+//            path_col:section.path_col,
+//            show_cols:section.show_cols,
+//            comma_separated_cols:section.comma_separated_cols,
+//            title_col:section.title_col,
+//            year_end_col:section.year_end_col,
+//            year_start_col:section.year_start_col,
+//            json_data:section.all_data
+//            })
 
-            group_col:section.group_col,
-            image_col:section.image_col,
-            path_col:section.path_col,
-            show_cols:section.show_cols,
-            comma_separated_cols:section.comma_separated_cols,
-            title_col:section.title_col,
-            year_end_col:section.year_end_col,
-            year_start_col:section.year_start_col,
-            json_data:section.all_data
-            })
-
+             //clean up
+              delete section.json_data;
+              section.items_showing=[]
+              console.log(section)
           }
+
           $this.check_all_section_completion()
     }
     check_all_section_completion(){
@@ -116,7 +122,6 @@ class Section_Manager {
              }
         }
         if (all_sections_data_loaded){
-            /// todo Create a filter manager for the data
 
             //hide loader
             clearInterval($this.progress_interval)
@@ -209,10 +214,9 @@ class Section_Manager {
     setup_interface(){
         this.list_sections()
         run_resize()
-        this.init_search_interface()
+        filter_manager.init_search_interface(this.json_data)
         // if there is only one section, select it and move to results
         if(this.json_data.length==1){
-
             setTimeout(() => {
                $("#section_0").trigger("click");
                 $("#arrow_0").trigger("click");
@@ -261,7 +265,7 @@ class Section_Manager {
         //move to the results panel and list all the items
         // each items visibility is stored in the filter manager - if showing
 
-        var items_showing=this.json_data[_id].filter_manager.items_showing
+        var items_showing=this.json_data[_id].items_showing
         var data = $this.get_match('section_id_'+_id)
         var sort_dir=$('#list_sort').val()
         var title_col=$this.json_data[_id]["title_col"]
@@ -320,7 +324,7 @@ class Section_Manager {
     }
     get_match(_id){
         _id=_id.replaceAll('section_id_', '')
-        return this.json_data[_id].filter_manager.json_data
+        return this.json_data[_id].all_data
     }
     slide_position(panel_name){
         var pos=0
@@ -374,81 +378,7 @@ class Section_Manager {
         }
         this.slide_position(go_to_panel)
     }
-    init_search_interface(){
-    var $this=this
-    $('#list_sort').change(function() {
-       $this.list_results($this.showing_id)
-    });
 
-
-
-    $("#search").focus();
-    $("#search_clear").click(function(){
-        $("#search").val("")
-    })
-    ///--------
-    $('input[type=radio][name=search_type]').change(function() {
-        $this.mode=this.value
-    });
-
-     $("#search_but").click(function(){
-        if($this.mode=="data"){
-           $this.add_filter(false,[$("#search").val()])
-           $this.filter()
-           //go to results
-           $this.slide_position("results")
-        }else{
-            $.get($this.place_url, { q: $("#search").val() }, function(data) {
-                try{
-                    $this.show_place_bounds(data[0].boundingbox)
-                    $("#search").val(data[0].display_name)
-                }catch(e){
-
-                }
-
-          })
-        }
-    })
-//    $('#filter_bounds_checkbox').change(
-//        function(){
-//             filter_manager.update_bounds_search($(this))
-//        }
-//    );
-//    //
-//    //date search
-//    $('#filter_date_checkbox').change(
-//        function(){
-//          filter_manager.delay_date_change();
-//        }
-//    );
-//    var start =new Date("1800-01-01T00:00:00")
-//    var end =new Date();
-//    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
-//    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
-//
-//    $("#filter_start_date").change( function() {
-//        filter_manager.delay_date_change()
-//
-//    });
-//    $("#filter_end_date").change( function() {
-//      filter_manager.delay_date_change()
-//    });
-//
-//    var values = [start.getTime(),end.getTime()]
-//    $("#filter_date .filter_slider_box").slider({
-//        range: true,
-//        min: values[0],
-//        max: values[1],
-//        values:values,
-//        slide: function( event, ui ) {
-//
-//           $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
-//           $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
-//           filter_manager.delay_date_change()
-//
-//     }
-//    })
-    }
 }
 
  

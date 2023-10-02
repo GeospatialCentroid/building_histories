@@ -21,9 +21,7 @@ class Filter_Manager {
     for (var p in properties){
         this[p]=properties[p]
     }
-    //keep reference to the the loaded spreadsheet data - source of filtering, selection and display
-//    this.json_data;
-    this.mode='data';
+
     // store the subset of results for use
     this.subset_data;
     // store the item in the list
@@ -402,50 +400,7 @@ class Filter_Manager {
         //this.slide_position("results");
     }
 
-    populate_search(data){
-       // to make it easy to select a dataset, an autocomplete control is used and populated based on entered values
 
-       var $this = this
-        // loop over the data and add 'value' and 'key' items for use in the autocomplete input element
-       this.subset_data =
-       $.map(data, function(item){
-            var label =item[$this.title_col]
-            console.log()
-            if ($this.hasOwnProperty('sub_title_col') && item[$this.sub_title_col]!=""){
-                label +=" ("+item[$this.sub_title_col]+")"
-            }
-
-            return {
-                label: label,
-                value: item["id"]
-            };
-        });
-
-      $( "#search" ).autocomplete({
-          source: this.subset_data,
-          minLength: 0,
-          select: function( event, ui ) {
-                event.preventDefault();
-                $("#search").val(ui.item.label.substring(0,ui.item.label.indexOf("(")-1));
-                $("#search_but").trigger("click")
-            },
-        focus: function(event, ui) {
-            event.preventDefault();
-            $("#search").val(ui.item.label);
-        }
-
-      });
-      $(document).on("keydown", "#search", function(e) {
-            if(e.keyCode==13){
-                $("#search_but").trigger("click")
-            }
-        })
-
-      this.show_results()
-
-      //update counts
-      this.update_results_info(this.subset_data.length)
-    }
 
     show_results(){
          // loop over the subset of items and create entries in the 'results_view'

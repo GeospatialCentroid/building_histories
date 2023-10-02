@@ -5,6 +5,7 @@ var usp={};// the url params object to be populated
 var LANG;
 var map_manager;
 var layer_manager;
+var filter_manager;
 var analytics_manager;
 if (typeof(params)=="undefined"){
     var params = {}
@@ -48,8 +49,8 @@ function initialize_interface(){
    setup_map();
 
     //setup_filters()
-     analytics_manager = new Analytics_Manager();
-
+    analytics_manager = new Analytics_Manager();
+    filter_manager = new Filter_Manager();
     section_manager=new Section_Manager({config:"app.csv"})
     section_manager.init();
 }

@@ -96,7 +96,6 @@ class Layer_Manager {
     var resource = section_manager.get_match(_resource_id)
     // todo we need to be able to know whether an item is visible or not
 
-    console.log("TOGGLE",$this.is_on_map(_resource_id) , item_ids==false)
     if($this.is_on_map(_resource_id) && !item_ids){
       $this.remove_feature_layer(_resource_id);
 //        $("#"+_resource_id+"_drag").remove();
@@ -905,7 +904,7 @@ class Layer_Manager {
   // hiding
   // Unchecking any checkbox will take all the ids associated with it and remove them from the map
 
-    var items_showing=section_manager.json_data[_resource_id.replaceAll('section_id_', '')].filter_manager.items_showing
+    var items_showing=section_manager.json_data[_resource_id.replaceAll('section_id_', '')].items_showing
     $this.create_style_class(_resource_id)
     var data = section_manager.get_match(_resource_id)
     //     var markers = L.markerClusterGroup();
