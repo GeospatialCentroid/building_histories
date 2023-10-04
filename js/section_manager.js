@@ -165,19 +165,35 @@ class Section_Manager {
         for (var i=0;i<all_data.length;i++){
             // inject and if for access
             all_data[i]._id=i
-            var left_join_val=all_data[i][left_join_col]
+            var left_join_val=all_data[i][left_join_col].toLowerCase()
             for (var j=0;j<data_to_join.features.length;j++){
                 //console.log(data_to_join.features[j].properties[right_join_col],"values")
-               if(left_join_val == data_to_join.features[j].properties[right_join_col]){
+               if( data_to_join.features[j].properties[right_join_col] && left_join_val == data_to_join.features[j].properties[right_join_col].toLowerCase()){
                     for (var p in data_to_join.features[j].properties){
                         // inject all the properties from the geojson
                         all_data[i][p]=data_to_join.features[j].properties[p]
                     }
                     // add the feature for ease of access
-                    all_data[i].feature = data_to_join.features[j]
+                    if(!all_data[i]?.feature){
+                     all_data[i].feature = data_to_join.features[j]
+                       //todo -- add as feature collection = all_data[i].feature_collection ={"type": "FeatureCollection","features": []}
+                    }else{
+                        console.log(  all_data[i].feature)
+                        if( all_data[i].feature.geometry.type=="Polygon"){
+                            //change the type the first time
+                            all_data[i].feature.geometry.type="MultiPolygon"
+                            //warp in array
+                            all_data[i].feature.geometry.coordinates=[ all_data[i].feature.geometry.coordinates]
+                        }
+                         all_data[i].feature.geometry.coordinates.push(data_to_join.features[j].geometry.coordinates)
+
+                        console.log(JSON.stringify(all_data[i].feature))
+
+                    }
+
                     // keep the feature and child id consistent
                     all_data[i].feature.id=i;
-                    break
+                   // break
                }
             }
 
