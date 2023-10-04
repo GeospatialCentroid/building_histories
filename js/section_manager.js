@@ -175,7 +175,8 @@ class Section_Manager {
                     }
                     // add the feature for ease of access
                     all_data[i].feature = data_to_join.features[j]
-
+                    // keep the feature and child id consistent
+                    all_data[i].feature.id=i;
                     break
                }
             }
@@ -184,13 +185,12 @@ class Section_Manager {
     }
     update_geojson_properties(all_data,show_cols,image_col){
         // we really need the details stored in the properties
+        var count=0
         for (var i=0;i<all_data.length;i++){
             var properties={}
 
             for (var j=0;j<show_cols.length;j++){
                 // inject all the properties form the geojson
-
-
                properties[show_cols[j]]=  all_data[i][show_cols[j]]
             }
             // and if there is an image col
@@ -206,10 +206,12 @@ class Section_Manager {
                 properties[image_col]=html_images
                }
             if(all_data[i]?.feature){
+                count++
                 all_data[i].feature.properties=properties
             }
 
         }
+        console.log("WE have ",count,"shapes")
     }
     setup_interface(){
         this.list_sections()
@@ -218,8 +220,8 @@ class Section_Manager {
         // if there is only one section, select it and move to results
         if(this.json_data.length==1){
             setTimeout(() => {
-               $("#section_0").trigger("click");
-                $("#arrow_0").trigger("click");
+//               $("#section_0").trigger("click");
+//                $("#arrow_0").trigger("click");
             }, "100");
 
         }
@@ -233,11 +235,8 @@ class Section_Manager {
 //             html+= "onmouseenter='filter_manager.show_bounds(\""+id+"\")' "
                 html+=">"
                 html+= this.json_data[i]["section_name"]
-                html+='<div class="float-end input-group-text"><span class="form-check"  onclick="section_manager.show_section('+id+')"><input class="form-check-input" type="checkbox" value="" id="section_'+id+'" ></span>'
+                html+='<div class="float-end input-group-text"><span class="form-check" ><input class="form-check-input section_check" type="checkbox" value="" id="section_id_'+id+'" ></span>'
                 html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='section_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
-//             if(this.get_match(id).usable_links.length>0){
-
-//             }
              html+="</div>"
 
              html+="</li>"
@@ -245,18 +244,35 @@ class Section_Manager {
         html+="</ul>"
 
         $("#sections_view").html(html)
+        $(".section_check").change(function() {
+            section_manager.show_section($(this).attr('id'))
+        });
 
     }
-    show_section(_id){
+    show_section(section_id){
         var $this=section_manager
-        var data = $this.get_match("section_id_"+_id)
+        var parent_id=section_id.replaceAll('section_id_', '')
+        console.log(section_id)
+        var data = $this.get_match(section_id)
+
         var item_ids=[]
-         for (var i=0;i<data.length;i++){
-            if(data[i]?.feature){
-                item_ids.push(i);
+
+         var items_showing=section_manager.json_data[parent_id].items_showing
+         if($('#'+"section_id_"+parent_id).is(':checked')){
+            for (var i=0;i<data.length;i++){
+                if(data[i]?.feature){
+                    if($.inArray( data[i]._id, items_showing)==-1){
+                    item_ids.push(data[i]._id);
+                    }else{
+                        console.log("ALREADY IN ARRAY ",data[i]._id)
+                    }
+                }
             }
+         }else{
+            // we are hiding, take all showing features
+            item_ids= [...items_showing]
          }
-        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[_id].drawing_info.replaceAll('\n', ''))),false,false,item_ids)// todo update this "csv_geojson",false
+        layer_manager.toggle_layer("section_id_"+parent_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[parent_id].drawing_info.replaceAll('\n', ''))),false,false,item_ids)// todo update this "csv_geojson",false
     }
     list_results(parent_id){
         var $this = section_manager

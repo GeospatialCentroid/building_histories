@@ -909,19 +909,20 @@ class Layer_Manager {
     $this.create_style_class(_resource_id)
     var data = section_manager.get_match(_resource_id)
     //     var markers = L.markerClusterGroup();
-     var unique_id=0;
-     for (var i=0;i<item_ids.length;i++){
 
-        var j=item_ids[i]
-        var index =$.inArray( j, items_showing)
+     for (var i=0;i<item_ids.length;i++){
+        var item_id=item_ids[i]
+        var index =$.inArray( item_id, items_showing)
         if (index==-1){
 
-            layer_obj.addLayer($this.create_geo_feature(data[j].feature,_resource_id,layer_obj, false, false,unique_id++).bindTooltip(data[j].feature.properties[Object.keys(data[j].feature.properties)[0]]));
-            items_showing.push(j)
+            layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false).bindTooltip(data[item_id].feature.properties[Object.keys(data[item_id].feature.properties)[0]]));
+            //console.log(layer_obj.getLayers())
+            items_showing.push(item_id)
         }else{
+
             try{
                 // it's possible a shape Path errors-out when trying to remove, just try to remove it
-                layer_obj.removeLayer(data[j].feature.id);// note: we need to use the internal id number
+                layer_obj.removeLayer(data[item_id].feature.id);// note: we need to use the internal id number
             }catch(error){
 
             }
@@ -930,12 +931,13 @@ class Layer_Manager {
         }
 
      }
+     console.log("The remaining items are",section_manager.json_data[_resource_id.replaceAll('section_id_', '')].items_showing)
     //layer_obj.addLayer(markers)
     //map_manager.map_zoom_event(layer_obj.getBounds())
     if(items_showing.length>0){
         $this.map.fitBounds(layer_obj.getBounds());
     }
-
+    // associate data for access during map click selection
     layer_obj.data = data
 
   }
