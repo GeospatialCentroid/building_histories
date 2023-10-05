@@ -175,25 +175,27 @@ class Section_Manager {
                     }
                     // add the feature for ease of access
                     if(!all_data[i]?.feature){
-                     all_data[i].feature = data_to_join.features[j]
-                       //todo -- add as feature collection = all_data[i].feature_collection ={"type": "FeatureCollection","features": []}
+                        //first time to add features
+                         //all_data[i].feature = data_to_join.features[j] // does not enable consistent/reliable display of features
+                         all_data[i].feature = {"type": "FeatureCollection","features": []}
+                          all_data[i].feature.features.push(data_to_join.features[j])
+
                     }else{
                         console.log(  all_data[i].feature)
-                        if( all_data[i].feature.geometry.type=="Polygon"){
+                        if(  all_data[i].feature.features[0].geometry.type=="Polygon"){
                             //change the type the first time
-                            all_data[i].feature.geometry.type="MultiPolygon"
+                            all_data[i].feature.features[0].geometry.type="MultiPolygon"
                             //warp in array
-                            all_data[i].feature.geometry.coordinates=[ all_data[i].feature.geometry.coordinates]
+                           all_data[i].feature.features[0].geometry.coordinates=[all_data[i].feature.features[0].geometry.coordinates]
                         }
-                         all_data[i].feature.geometry.coordinates.push(data_to_join.features[j].geometry.coordinates)
+                        all_data[i].feature.features[0].geometry.coordinates.push(data_to_join.features[j].geometry.coordinates)
 
-                        console.log(JSON.stringify(all_data[i].feature))
 
                     }
 
                     // keep the feature and child id consistent
-                    all_data[i].feature.id=i;
-                   // break
+                    all_data[i].feature.features[0].id=all_data[i]._id;
+                   // break // don't break as there may be more featurers to add
                }
             }
 
@@ -223,7 +225,8 @@ class Section_Manager {
                }
             if(all_data[i]?.feature){
                 count++
-                all_data[i].feature.properties=properties
+                console.log(all_data[i].feature)
+                all_data[i].feature.features[0].properties=properties
             }
 
         }
@@ -236,8 +239,8 @@ class Section_Manager {
         // if there is only one section, select it and move to results
         if(this.json_data.length==1){
             setTimeout(() => {
-//               $("#section_0").trigger("click");
-//                $("#arrow_0").trigger("click");
+               $("#section_id_0").trigger("click");
+                $("#arrow_0").trigger("click");
             }, "100");
 
         }

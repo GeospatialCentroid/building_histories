@@ -671,7 +671,9 @@ class Layer_Manager {
     // if we don't have an id, add one artificially called '_id'
     // be sure to exclude this from export
     if (!feature.properties?.id){
-        feature.properties._id=unique_id
+       //feature.properties._id=unique_id
+
+       feature.id=unique_id
     }else{
         feature.properties._id = feature.properties.id
     }
@@ -914,15 +916,12 @@ class Layer_Manager {
         var item_id=item_ids[i]
         var index =$.inArray( item_id, items_showing)
         if (index==-1){
-
-            layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false).bindTooltip(data[item_id].feature.properties[Object.keys(data[item_id].feature.properties)[0]]));
-            //console.log(layer_obj.getLayers())
+            layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id).bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
             items_showing.push(item_id)
         }else{
-
             try{
                 // it's possible a shape Path errors-out when trying to remove, just try to remove it
-                layer_obj.removeLayer(data[item_id].feature.id);// note: we need to use the internal id number
+                layer_obj.removeLayer(item_id);// note: we need to use the internal id number
             }catch(error){
 
             }
