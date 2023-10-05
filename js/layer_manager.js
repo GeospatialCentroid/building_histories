@@ -916,8 +916,11 @@ class Layer_Manager {
         var item_id=item_ids[i]
         var index =$.inArray( item_id, items_showing)
         if (index==-1){
-            layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id).bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
-            items_showing.push(item_id)
+            if(data[item_id]?.feature){
+                 layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id).bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
+                 items_showing.push(item_id)
+             }
+
         }else{
             try{
                 // it's possible a shape Path errors-out when trying to remove, just try to remove it
@@ -930,12 +933,12 @@ class Layer_Manager {
         }
 
      }
-     console.log("The remaining items are",section_manager.json_data[_resource_id.replaceAll('section_id_', '')].items_showing)
+
     //layer_obj.addLayer(markers)
     //map_manager.map_zoom_event(layer_obj.getBounds())
-    if(items_showing.length>0){
-        $this.map.fitBounds(layer_obj.getBounds());
-    }
+//    if(items_showing.length>0){
+//        $this.map.fitBounds(layer_obj.getBounds());
+//    }
     // associate data for access during map click selection
     layer_obj.data = data
 

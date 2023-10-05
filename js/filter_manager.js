@@ -51,6 +51,8 @@ class Filter_Manager {
               })
             }
         })
+
+
 //    $('#filter_bounds_checkbox').change(
 //        function(){
 //             filter_manager.update_bounds_search($(this))
