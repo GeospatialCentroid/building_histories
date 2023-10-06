@@ -167,7 +167,7 @@ class Section_Manager {
     join_geojson(all_data,data_to_join,left_join_col,right_join_col){
 
         for (var i=0;i<all_data.length;i++){
-            // inject and if for access
+            // inject an id for access
             all_data[i]._id=i
             var left_join_val=all_data[i][left_join_col].toLowerCase()
             for (var j=0;j<data_to_join.features.length;j++){
@@ -177,29 +177,38 @@ class Section_Manager {
                         // inject all the properties from the geojson
                         all_data[i][p]=data_to_join.features[j].properties[p]
                     }
-                    // add the feature for ease of access
+                    // add the feature
                     if(!all_data[i]?.feature){
                         //first time to add features
-                         //all_data[i].feature = data_to_join.features[j] // does not enable consistent/reliable display of features
-                         all_data[i].feature = {"type": "FeatureCollection","features": []}
-                          all_data[i].feature.features.push(data_to_join.features[j])
+
+                        all_data[i].feature = {"type": "FeatureCollection","features": []}
+                        all_data[i].feature.features.push(data_to_join.features[j])
+                        all_data[i].feature.features[0].geometry.type="MultiPolygon"
+                        // keep the feature and child id consistent
+                        all_data[i].feature.features[0].id=all_data[i]._id;
+                        //wrap the coordinates in an array to allow for more coordinates to be joined
+
+                        if(all_data[i].feature.features[0].geometry.coordinates[0][0].length==2){
+                             all_data[i].feature.features[0].geometry.coordinates=[all_data[i].feature.features[0].geometry.coordinates]
+                        }
+
+
 
                     }else{
-                        console.log(  all_data[i].feature)
-                        if(  all_data[i].feature.features[0].geometry.type=="Polygon"){
-                            //change the type the first time
-                            all_data[i].feature.features[0].geometry.type="MultiPolygon"
-                            //warp in array
-                           all_data[i].feature.features[0].geometry.coordinates=[all_data[i].feature.features[0].geometry.coordinates]
-                        }
+//                        console.log(  all_data[i].feature)
+//                        if(  all_data[i].feature.features[0].geometry.type=="Polygon"){
+//                            //change the type the first time
+//                            all_data[i].feature.features[0].geometry.type="MultiPolygon"
+//                            //warp in array
+//                           all_data[i].feature.features[0].geometry.coordinates=[all_data[i].feature.features[0].geometry.coordinates]
+//                        }
                         all_data[i].feature.features[0].geometry.coordinates.push(data_to_join.features[j].geometry.coordinates)
-
+                        console.log("we have more to add",data_to_join.features[j])
 
                     }
 
-                    // keep the feature and child id consistent
-                    all_data[i].feature.features[0].id=all_data[i]._id;
-                   // break // don't break as there may be more featurers to add
+
+                   // break // don't break as there may be more features to add
                }
             }
 
@@ -329,13 +338,58 @@ class Section_Manager {
             range: true,
             step: 1,
             values: [section.start, section.end],
-            slide: function(event, ui) {
+            change: function(event, ui) {
                  $this.delay_date_change(section_id)
                  $("#filter_start_date").val( $("#slider").slider("values")[ 0 ])
                  $("#filter_end_date").val($("#slider").slider("values")[ 1 ])
             }
         });
     }
+
+
+    slider_toggle() {
+        console.log("slide start",$("#slider_toggle i").hasClass("bi-pause-fill"))
+        if($("#slider_toggle i").hasClass("bi-pause-fill")){
+            section_manager.slider_pause()
+            return
+        }
+         $("#slider_toggle i").removeClass("bi-play-fill")
+         $("#slider_toggle i").addClass("bi-pause-fill")
+
+
+        //if we are at the end. start at the beginning
+        console.log($("#slider").slider("option", "max"),$("#slider").slider("values")[1])
+        if($("#slider").slider("option", "max")==$("#slider").slider("values")[1]){
+             $("#slider").slider('values',1,$("#slider").slider("option", "min"))
+        }
+        section_manager.slider_step()
+    }
+   slider_step() {
+
+        var curr_position=$("#slider").slider("values")[1]
+        var next_position=curr_position+5
+        if(next_position>$("#slider").slider("option", "max")){
+            next_position=$("#slider").slider("option", "max")
+        }
+        $("#slider").slider('values',1,next_position).trigger('change');
+        //if we are at the end. start at the beginning
+        if($("#slider").slider("option", "max")==curr_position){
+              console.log("are at the end")
+              section_manager.slider_pause()
+              return
+        }
+
+        section_manager.slider_timeout=setTimeout(function(){
+        section_manager.slider_step()
+        },300)
+    }
+    slider_pause() {
+        //stop the timer
+        $("#slider_toggle i").removeClass("bi-pause-fill")
+        $("#slider_toggle i").addClass("bi-play-fill")
+        clearTimeout(section_manager.slider_timeout);
+    }
+    //
      delay_date_change(section_id){
         var $this=this
         // prevent multiple calls when editing filter parameters
@@ -346,7 +400,7 @@ class Section_Manager {
               $this.update_date_filter(section_id)
               $this.timeout=false
 
-        },500)
+        },300)
      }
      update_date_filter(section_id){
          var $this=this
@@ -372,7 +426,6 @@ class Section_Manager {
         for (var i=0;i<data.length;i++){
             var meets_criteria =true
             var val = Number(data[i][section.year_start_col])
-            console.log(val, start,end)
             if (val<start || val>end){
                  meets_criteria=false
             }

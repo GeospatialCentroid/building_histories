@@ -26,6 +26,8 @@ class Filter_Manager {
         $("#search").focus();
         $("#search_clear").click(function(){
             $("#search").val("")
+            //back to browse
+            $this.section_manager.slide_position("browse")
         })
         ///--------
         $('input[type=radio][name=search_type]').change(function() {

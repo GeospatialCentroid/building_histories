@@ -85,7 +85,7 @@ class Layer_Manager {
   }
   toggle_layer(_resource_id,type,drawing_info,url,z,item_ids){
 
-    console.log("toggle_layer",_resource_id)
+    console_log("toggle_layer",_resource_id)
     var $this=layer_manager;
 
 //    if(!disclaimer_manager.check_status(_resource_id,z,$this.toggle_layer)){
@@ -917,8 +917,14 @@ class Layer_Manager {
         var index =$.inArray( item_id, items_showing)
         if (index==-1){
             if(data[item_id]?.feature){
+
+
+                try{
                  layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id).bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
                  items_showing.push(item_id)
+                 }catch(error){
+                      console.log(error,"Error trying to create",data[item_id].feature)//JSON.stringify(
+                 }
              }
 
         }else{

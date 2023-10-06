@@ -175,26 +175,17 @@
 
                     <div class="input-group search_wrapper">
                       <input id="search" type="text" class="form-control" placeholder="">
+                        <button id="search_clear" type="button" title="Clear search" data-original-title="Clear search" class="btn bg-transparent">
+                          <i class="bi bi-x-lg"></i>
+                        </button>
                       <div class="input-group-append">
                         <button class="btn  btn-primary" type="button" id="search_but"> <i class="bi bi-search"></i></button>
                       </div>
                     </div>
 
-                     <div id="filter_bounds">
-                         <div  class="float-left">
-                          <input  id="filter_bounds_checkbox" type="checkbox" value="">
-                          <label class="form-check-label" for="filter_bounds_checkbox"></label>
-                        </div>
-                     </div>
+
                     <br/>
-                     <div id="filter_date" class="inline">
-                         <input  id="filter_date_checkbox" type="checkbox" value="">
-                          <label class="form-check-label" for="filter_date_checkbox"></label>
-                         <input id="filter_start_date" type="text" class="date_field"/>
-                         <span id="filter_date_to"></span>
-                         <input id="filter_end_date" type="text" class="date_field"/>
-                         <div class='filter_slider_box'></div>
-                     </div>
+
                      <div id="filter_box"></div>
                 </div>
                 <div id="nav_wrapper">
@@ -221,6 +212,17 @@
                             </div>
                         </div>
                         <div id="results_panel" class="panel">
+                            <div id="filter_date" class="inline">
+                                 <input  id="filter_date_checkbox" type="checkbox" value="">
+                                  <label class="form-check-label" for="filter_date_checkbox"></label>
+                                 <input id="filter_start_date" type="text" class="date_field"/>
+                                 <span id="filter_date_to"></span>
+                                 <input id="filter_end_date" type="text" class="date_field"/>
+                                 <div id="slider_wrapper">
+                                        <div id="slider"></div>
+                                        <button id="slider_toggle" onclick="section_manager.slider_toggle()" type="button" class="btn btn-outline-secondary"><i class="bi bi-play-fill"></i></button>
+                                 </div>
+                             </div><br/>
                             <label for="list_sort" id="sort-title">Sort:</label>
                             <select id="list_sort">
                                 <option value="">Default</option>

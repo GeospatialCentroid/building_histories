@@ -102,7 +102,6 @@ class Map_Manager {
      this.map.addControl(drawControl);
 
      this.add_legend()
-     this.add_slider()
 
      $this=this;
      this.map.on('draw:created', function (e) {
@@ -780,31 +779,7 @@ class Map_Manager {
 
 
     }
-     add_slider(){
 
-        //add custom control
-        L.Control.MyControl = L.Control.extend({
-          onAdd: function(map) {
-            var el = L.DomUtil.create('div', 'slider');
-            L.DomEvent.disableClickPropagation(el);
-            el.innerHTML = '<div id="slider"></div>';
-            return el;
-          },
-          onRemove: function(map) {
-            // Nothing to do here
-          }
-        });
-
-        L.control.myControl = function(opts) {
-          return new L.Control.MyControl(opts);
-        }
-
-        L.control.myControl({
-          position: 'bottomleft'
-        }).addTo(this.map);
-
-
-    }
 }
  
 
