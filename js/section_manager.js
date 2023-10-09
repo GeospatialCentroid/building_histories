@@ -324,7 +324,7 @@ class Section_Manager {
             // we are hiding, take all showing features
             item_ids= [...items_showing]
          }
-        layer_manager.toggle_layer("section_id_"+parent_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[parent_id].drawing_info.replaceAll('\n', ''))),false,false,item_ids)// todo update this "csv_geojson",false
+         $this.show_items(parent_id,item_ids)
          layer_manager.map.fitBounds(layer_manager.layers[layer_manager.layers.length-1].layer_obj.getBounds());
     }
     setup_slider(section_id){
@@ -411,8 +411,8 @@ class Section_Manager {
          var parent_id=section_id.replaceAll('section_id_', '')
 
          var items_showing=$this.json_data[parent_id].items_showing;
-          $this.show_item(parent_id,[...$this.json_data[parent_id].items_showing])
-          $this.show_item(parent_id,item_ids)
+          $this.show_items(parent_id,[...$this.json_data[parent_id].items_showing])
+          $this.show_items(parent_id,item_ids)
      }
     get_results_between(section_id,start,end){
         var parent_id=section_id.replaceAll('section_id_', '')
@@ -469,7 +469,7 @@ class Section_Manager {
              if(sorted_data[i]?.feature){
 
                  html+='<span style="cursor: pointer;" onclick="section_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
-                 html+='<span><div class="form-check"  onclick="section_manager.show_item('+parent_id+',['+sorted_data[i]._id+'])"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
+                 html+='<span><div class="form-check"  onclick="section_manager.show_items('+parent_id+',['+sorted_data[i]._id+'])"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
              }else{
                   html+=sorted_data[i][title_col]
              }
@@ -487,11 +487,11 @@ class Section_Manager {
 
         run_resize()
     }
-    show_item(_id,item_id){
+    show_items(_id,item_id){
         var $this = section_manager
         //toggle the layer but only show the specific item id
         // note: we'll want to pass an array of ids to
-        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(JSON.stringify($this.json_data[_id].drawing_info.replaceAll('\n', ''))),false,false,item_id)
+        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse($this.json_data[_id].drawing_info.replaceAll('\n', '')),false,false,item_id)
     }
     zoom_item(_id,item_id){
         var $this = section_manager

@@ -502,22 +502,18 @@ class Layer_Manager {
            this.load_tabular_data(url,layer_obj,_resource_id);
 
       }else if (service_method._method=="csv_geojson"){
-
              // check if we have a layer obj already
           var layer_obj=$this.get_layer_obj(_resource_id);
-
-
-          if(layer_obj){
+         if(layer_obj){
               //notice layer_ob.layer_obj
              this.show_csv_geojson_data(layer_obj.layer_obj,_resource_id,item_ids);
              return
           }else{
              // only create this layer if it doesn't yet exist
               layer_obj = L.featureGroup();
+              layer_obj.layer_options=layer_options
               this.show_csv_geojson_data(layer_obj,_resource_id,item_ids);
           }
-
-
 
       }else{
         console_log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
@@ -663,6 +659,11 @@ class Layer_Manager {
     var $this = this
 
     var style = {}
+
+    if(layer_obj.layer_options){
+        style=layer_obj.layer_options
+    }
+
     if(feature.properties?.color){
         style.fillColor= feature.properties.color
         style.color= feature.properties.color
@@ -759,6 +760,7 @@ class Layer_Manager {
 
   }
   get_layer_options(_resource_id,url,_drawing_info){
+
       var layer_options ={
         url: url,
         pane:_resource_id,
@@ -770,7 +772,6 @@ class Layer_Manager {
       var symbol;
       var renderer_type
       if (_drawing_info){
-            console_log("_drawing_info",_drawing_info)
           if(_drawing_info.renderer?.symbol){
              symbol = _drawing_info.renderer.symbol
              type = symbol.type
@@ -794,7 +795,7 @@ class Layer_Manager {
                 }
 
                  layer_options.color = rgbToHex(color_arr[0], color_arr[1], color_arr[2])
-                 layer_options.opacity = 255/Number(color_arr[2])
+                 layer_options.opacity = Number(color_arr[3])/255
                  if (symbol.outline){
                     layer_options.weight = Number(symbol.outline.width)
                  }
@@ -808,7 +809,7 @@ class Layer_Manager {
              if(symbol.color && type != "esriSLS"){
                      var color_arr=symbol.color
                      layer_options.fillColor = rgbToHex(color_arr[0], color_arr[1], color_arr[2])
-                     layer_options.fillOpacity = 255/Number(color_arr[2])
+                     layer_options.fillOpacity = Number(color_arr[3])/255
 
                      if( layer_options.fillOpacity==0){
                         layer_options.fill=false
@@ -920,7 +921,8 @@ class Layer_Manager {
 
 
                 try{
-                 layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id).bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
+                 layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id)
+                 .bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
                  items_showing.push(item_id)
                  }catch(error){
                       console.log(error,"Error trying to create",data[item_id].feature)//JSON.stringify(
