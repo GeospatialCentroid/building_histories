@@ -55,7 +55,7 @@ a {
 }
 
 .bg-primary{
- background-color: #1fc8e3 !important;
+ background-color: #28a745 !important;
 }
 
 .btn-primary {
@@ -82,6 +82,10 @@ a {
 .form-check-input:checked {
     background-color: #28a745;
     border-color:#28a745;
+}
+.slider-range{
+    margin-bottom:15px;
+    width:80% !important;
 }
 
 /*
@@ -496,11 +500,7 @@ position: absolute;
     margin-left:5px;
 
 }
-.ui-slider .ui-slider-handle {
-    width: 10px;
-    height: 10px;
-    margin-left: -5px;
-}
+
 
 .slider_box{
     float:right;
@@ -985,12 +985,7 @@ a[aria-disabled="true"] {
     margin-left: -40px;
     z-index: 100;
 }
-.ui-slider .ui-slider-handle {
-    height: 15px;
-    width: 15px;
-    padding-left: 5px;
-    margin-top: 0px;
-}
+
 #slider_wrapper {
  padding: 10px;
  width:100%;

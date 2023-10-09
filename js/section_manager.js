@@ -157,11 +157,12 @@ class Section_Manager {
                     var show_cols=section.show_cols.split(",").map(function(item) {
                           return item.trim();
                         });
-                    var group_cols=section.group_cols.split(",").map(function(item) {
+                    var filter_cols=section.filter_cols.split(",").map(function(item) {
                           return item.trim();
                         });
+                    section.filter_cols=filter_cols
                     this.update_geojson_properties(section.all_data,show_cols,section?.image_col)
-                    filter_manager.create_filter_values(section,section.all_data,group_cols,section?.year_start_col,section?.year_end_col);
+                    filter_manager.create_filter_values(section,section.all_data,filter_cols,section?.year_start_col,section?.year_end_col);
                 }
                 //console.log("second data",section.data[j].data,section.data[j][1])
 

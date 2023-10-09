@@ -359,13 +359,7 @@ class Filter_Manager {
         }
         this.filter()
     }
-     update_results_info(num){
 
-        $(".total_results").text(LANG.RESULT.FOUND+" "+num+" "+LANG.RESULT.RESULTS)
-        $(".spinner-border").hide();
-
-
-    }
     get_page_num(id){
         //the page number is based on the item position in the filtered list
        //look for the id in the subset and return the position

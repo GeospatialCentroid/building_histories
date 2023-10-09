@@ -206,14 +206,12 @@
                         <div id='browse_wrapper' class="panel scroll_wrapper">
                             <div id="browse_panel">
 <!--                                 <div class="title"></div>-->
-                                 <div id="filter_area">
-                                    <div id="filters" class="ui-widget" ></div>
-                                </div>
+
                             </div>
                         </div>
                         <div id="results_panel" class="panel">
                             <div id="filter_date" class="inline">
-                                 <input  id="filter_date_checkbox" type="checkbox" value="">
+                                 <input  id="filter_date_checkbox" class="form-check-input" type="checkbox" value="" onclick="filter_manager.update_date_filter()">
                                   <label class="form-check-label" for="filter_date_checkbox"></label>
                                  <input id="filter_start_date" type="text" class="date_field"/>
                                  <span id="filter_date_to"></span>
@@ -223,6 +221,9 @@
                                         <button id="slider_toggle" onclick="filter_manager.slider_toggle()" type="button" class="btn btn-outline-secondary"><i class="bi bi-play-fill"></i></button>
                                  </div>
                              </div><br/>
+                            <div id="filter_area">
+                                    <div id="filters" class="ui-widget" ></div>
+                            </div>
                             <label for="list_sort" id="sort-title">Sort:</label>
                             <select id="list_sort">
                                 <option value="">Default</option>

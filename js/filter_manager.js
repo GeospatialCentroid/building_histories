@@ -12,13 +12,14 @@ class Filter_Manager {
     // a dictionary of all the filters set
     this.filters={}
     this.mode='data';
+    this.showing_id;// keep track of the current section on display
    }
      init_search_interface(json_data){
         //  called from section manager
         var $this=this
         this.populate_search(json_data)
         $('#list_sort').change(function() {
-           $this.list_results($this.section_manager.showing_id)
+           $this.list_results($this.showing_id)
         });
 
 
@@ -67,33 +68,14 @@ class Filter_Manager {
 //          filter_manager.delay_date_change();
 //        }
 //    );
-//    var start =new Date("1800-01-01T00:00:00")
-//    var end =new Date();
-//    $("#filter_start_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(start, 'yyyy-MM-dd'))
-//    $("#filter_end_date").datepicker({ dateFormat: 'yy-mm-dd'}).val($.format.date(end, 'yyyy-MM-dd'))
-//
-//    $("#filter_start_date").change( function() {
-//        filter_manager.delay_date_change()
-//
-//    });
-//    $("#filter_end_date").change( function() {
-//      filter_manager.delay_date_change()
-//    });
-//
-//    var values = [start.getTime(),end.getTime()]
-//    $("#filter_date .filter_slider_box").slider({
-//        range: true,
-//        min: values[0],
-//        max: values[1],
-//        values:values,
-//        slide: function( event, ui ) {
-//
-//           $("#filter_start_date").datepicker().val($.format.date(new Date(ui.values[0]), 'yyyy-MM-dd'))
-//           $("#filter_end_date").datepicker().val($.format.date(new Date(ui.values[1]), 'yyyy-MM-dd'))
-//           filter_manager.delay_date_change()
-//
-//     }
-//    })
+
+    }
+    update_results_info(num){
+
+        $(".total_results").text(LANG.RESULT.FOUND+" "+num+" "+LANG.RESULT.RESULTS)
+        $(".spinner-border").hide();
+
+
     }
     populate_search(data){
        // to make it easy to select a dataset, an autocomplete control is used and populated based on entered values
@@ -167,11 +149,18 @@ class Filter_Manager {
         }
 
     }
-    filter(){
+    filter(section_id){
         // create a subset of the items based on the set filters
         var subset=[]
         //loop though the items in the list
-        for (var i=0;i<this.section_manager.json_data.length;i++){
+        var start=0
+        var end=this.section_manager.json_data.length
+        if(section_id){
+            //allow filtering results from a single section
+            start=section_id
+            end =section_id+1
+        }
+        for (var i=start;i<end;i++){
             for (var j=0;j<this.section_manager.json_data[i].all_data.length;j++){
                 // compare each to the filter set to create a subset
                 var meets_criteria=true; // a boolean to determine if the item should be included
@@ -279,31 +268,172 @@ class Filter_Manager {
         });
     }
     //---
-     create_filter_values(section,all_data,group_cols,year_start_col,year_end_col){
+     create_filter_values(section,all_data,filter_cols,year_start_col,year_end_col){
         // set variables to assist with grouping and filtering
         // a group allows a way to show a whole bunch of features at the same time.
         //todo add col grouping
+
+
         // year_start_col and year_end_cols allow a way to show change over time
         var years=[]
         for (var i=0;i<all_data.length;i++){
-
             if(year_start_col){
                years.push(Number(all_data[i][year_start_col]))
-
             }
             if(year_end_col && all_data[i][year_end_col]){
                  years.push(Number(all_data[i][year_end_col]))
-
             }
-
         }
         years.sort()
         section.start=years[0]
         section.end=years[years.length-1]
     }
-    //------- Data slider
+    //--
+     generate_filters(_data,filter_cols){
+        // create a list of all the unique values
+        // then create controls to allow users to filter items
+        // these controls will update their counts when filters are selected
+        $("#filters").empty()
+        var $this=this;
+        // create a catalog of all the unique options for each of attributes
+        this.catalog={}
+        // create a separate obj to track the occurrences of each unique option
+        this.catalog_counts={}
+        for (var i=0;i<_data.length;i++){
+            var obj=_data[i]
+            //add a unique id, prepend 'item_' for use as a variable, only do this on first pass
+            if(!this.ids_added){
+              obj["id"]="item_"+i;
+            }
+
+            //for (var a in obj){// use instead if we want to filter on all
+            for (var j in filter_cols){
+                a=filter_cols[j]
+               //start with a check for numeric
+               if ($.isNumeric(obj[a])){
+                obj[a]=parseInt(obj[a])
+               }
+               // see if we hve and array
+               if ($.isArray(obj[a])){
+                    // need to add all the array items into the catalog
+                    for (var j = 0; j<obj[a].length;j++){
+                        this.add_to_catalog(a,obj[a][j])
+                    }
+               }else{
+                    this.add_to_catalog(a,obj[a])
+               }
+
+            }
+
+        }
+        // sort all the items
+        // create controls - Note column names are used for ids - spaces replaced with '__'
+         for (var a in this.catalog){
+                // join with counts and sort by prevalence
+               var catalog_and_counts=[]
+               for(var j=0;j<this.catalog[a].length;j++){
+                    catalog_and_counts.push([this.catalog_counts[a][j],this.catalog[a][j]])
+               }
+
+                catalog_and_counts.sort(function (a, b) {
+                    if (a[0] === b[0]) {
+                        return 0;
+                    }
+                    else {
+                        return (a[0] > b[0]) ? -1 : 1;
+                    }
+                });
+               // now extract the values
+               this.catalog[a]=[]
+               this.catalog_counts[a]=[]
+               for(var j=0;j<catalog_and_counts.length;j++){
+                    this.catalog[a].push(catalog_and_counts[j][1])
+                    this.catalog_counts[a].push(catalog_and_counts[j][0])
+               }
+               // generate control html based on data type (use last value to workaround blank first values)
+               if (this.catalog[a].length>0 && $.inArray(a,$this.omit_filter_item)==-1){
+                if( $.isNumeric(this.catalog[a][this.catalog[a].length-1])){
+                    //create a range slider for numbers - https://jqueryui.com/slider/#range
+                     var min = Math.min.apply(Math, this.catalog[a]);
+                     var max = Math.max.apply(Math, this.catalog[a]);
+                     $("#filters").append(this.get_range_slider(a,min,max))
+                     //to allow  fine-tuning - add min and max values
+                     var ext="_slider"
+                     $("#"+a.replaceAll(" ", "__")+ext).slider({
+                      range: true,
+                      min: min,
+                      max: max,
+                      values: [ min, max ],
+                      slide: function( event, ui ) {
+                        var id = $(this).attr('id')
+                        var _id= id.substring(0,id.length-ext.length)
+                        //set handle values
+                        $("#"+id+"_handle0").text(ui.values[ 0 ])
+                        $("#"+id+"_handle1").text(ui.values[ 1 ])
+                        //add the filter
+                        $this.add_filter(_id,ui.values)
+                        $this.filter()
+                      }
+
+                    });
+                    // add reference to input element to bind update
+                }else{
+                    $("#filters").append(this.get_multi_select(a,this.catalog[a],this.catalog_counts[a]))
+                }
+           }
+         }
+    }
+    add_to_catalog(col,val){
+        if(typeof(this.catalog[col])=="undefined"){
+               this.catalog[col]=[val]
+               this.catalog_counts[col]=[1]
+            }else{
+                //populate with any new value
+                var array_index=$.inArray(val,this.catalog[col])
+                if (array_index==-1){
+                    this.catalog[col].push(val)
+                    this.catalog_counts[col].push(1)
+                }else{
+                    this.catalog_counts[col][array_index]+=1
+                }
+            }
+    }
+     get_multi_select(id,options,counts){
+        var html=""
+        var _id = id.replaceAll(" ", "__");
+        html+="<label class='form-label' for='"+_id+"'>"+id+"</label>"
+        html+="<div class='form-group filter_list' name='"+_id+"' id='"+_id+"' >"
+        for (var o in options){
+            var val = options[o];
+            var text=options[o];
+            if(text==""){
+                text=LANG.SEARCH.BLANK
+            }
+            var count = ""
+            if (counts){
+               count = counts[o]
+            }
+            html+='<label class="list-group-item d-flex justify-content-between list-group-item-action">'
+            html+='<span><input class="form-check-input me-1 align-left" type="checkbox" value="'+val+'">'+text+'</span>'
+            html+='<span class="badge bg-primary rounded-pill">'+count+'</span></label>'
+        }
+
+        html+=" </div>"
+        return html
+
+    }
+     get_range_slider(id,min,max){
+        var _id = id.replaceAll(" ", "__");
+        var html=""
+        html+="<label class='form-label' for='"+_id+"'>"+id+"</label>"
+        html+="<div id='"+_id+"_slider' class='slider-range'><div id='"+_id+"_slider_handle0' class='ui-slider-handle'>"+min+"</div><div id='"+_id+"_slider_handle1' class='ui-slider-handle'>"+max+"</div></div>"
+        return html
+    }
+    //------- Date slider
      setup_slider(section_id){
         var $this=this
+        $("#filter_date_checkbox").prop( "checked", false );
+
         // show if there is date information
         var parent_id=section_id.replaceAll('section_id_', '')
         var section=$this.section_manager.json_data[parent_id]
@@ -315,11 +445,14 @@ class Filter_Manager {
             step: 1,
             values: [section.start, section.end],
             change: function(event, ui) {
-                 $this.delay_date_change(section_id)
+                 $this.delay_date_change()
                  $("#filter_start_date").val( $("#slider").slider("values")[ 0 ])
                  $("#filter_end_date").val($("#slider").slider("values")[ 1 ])
             }
         });
+        //set initial date value
+        $("#filter_start_date").val( section.start)
+         $("#filter_end_date").val(section.end)
     }
 
     slider_toggle() {
@@ -328,6 +461,7 @@ class Filter_Manager {
             $this.slider_pause()
             return
         }
+        $("#filter_date_checkbox").prop( "checked", true );
          $("#slider_toggle i").removeClass("bi-play-fill")
          $("#slider_toggle i").addClass("bi-pause-fill")
 
@@ -363,29 +497,40 @@ class Filter_Manager {
         clearTimeout(this.slider_timeout);
     }
     //
-     delay_date_change(section_id){
+     delay_date_change(){
         var $this=this
         // prevent multiple calls when editing filter parameters
         if(this.timeout){
             clearTimeout(this.timeout);
         }
         this.timeout=setTimeout(function(){
-              $this.update_date_filter(section_id)
+              $this.update_date_filter()
               $this.timeout=false
 
         },300)
      }
-     update_date_filter(section_id){
-         var $this=this
-         var start = $("#slider").slider("values")[ 0 ]
-         var end = $("#slider").slider("values")[ 1 ]
-         var item_ids =  $this.get_results_between(section_id,start,end);
-
-         var parent_id=section_id.replaceAll('section_id_', '')
-         // note: the section manager still tracks the items_showing
-         var items_showing=$this.section_manager.json_data[parent_id].items_showing;
-         $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
-         $this.show_items(parent_id,item_ids)
+     update_date_filter(){
+        var $this=this
+        if ($('#filter_date_checkbox').is(':checked')){
+//
+//            var section_id=$this.showing_id
+             var start = $("#slider").slider("values")[ 0 ]
+             var end = $("#slider").slider("values")[ 1 ]
+//             var item_ids =  $this.get_results_between(section_id,start,end);
+//
+//             var parent_id=section_id.replaceAll('section_id_', '')
+//             // note: the section manager still tracks the items_showing
+//             var items_showing=$this.section_manager.json_data[parent_id].items_showing;
+//             $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
+//             $this.show_items(parent_id,item_ids)
+                // todo make this dynamic based on the date column
+                $this.add_filter('Date built',[start,end])
+               $this.filter(this.showing_id);
+         }else{
+            console.log("So the rest of the ids")
+             $this.add_filter('Date built',null)
+             $this.filter(this.showing_id);
+         }
      }
     //-----------
     show_section(section_id){
@@ -414,38 +559,21 @@ class Filter_Manager {
          $this.show_items(parent_id,item_ids)
          layer_manager.map.fitBounds(layer_manager.layers[layer_manager.layers.length-1].layer_obj.getBounds());
     }
-
-    get_results_between(section_id,start,end){
-        var $this=this;
-        var parent_id=section_id.replaceAll('section_id_', '')
-        var section=$this.section_manager.json_data[parent_id]
-        var data=$this.section_manager.json_data[parent_id].all_data
-
-        // get a list of all the features that have a start value greater than or equal to the start
-                 // and an end value less than or equal to the end value
-                 // if no end value set it to latest value
-        var item_ids=[]
-        for (var i=0;i<data.length;i++){
-            var meets_criteria =true
-            var val = Number(data[i][section.year_start_col])
-            if (val<start || val>end){
-                 meets_criteria=false
-            }
-           if (meets_criteria && data[i]?.feature){
-            item_ids.push(data[i]._id)
-           }
-        }
-        return item_ids
-    }
     list_results(parent_id){
         var $this = this
-        $this.section_manager.showing_id=parent_id
-        $this.section_manager.slide_position("results")
+        //set initial variables
+        $this.showing_id=parent_id;
+        $this.filters={};// reset filters
+
+
+        $this.section_manager.slide_position("results");
         //move to the results panel and list all the items
         // each items visibility is stored in the filter manager - if showing
 
         var items_showing=$this.section_manager.json_data[parent_id].items_showing
         var data = $this.section_manager.get_match('section_id_'+parent_id)
+        $this.generate_filters(data,$this.section_manager.json_data[parent_id].filter_cols)
+        $this.add_filter_watcher();
         var title_col=$this.section_manager.json_data[parent_id]["title_col"]
         $this.sort_data(data,title_col)
     }
@@ -488,11 +616,18 @@ class Filter_Manager {
 
     //--
      show_results(sorted_data){
+        // hide all the items
+        var $this = this;
+        var parent_id=sorted_data[0].parent_id
+         // todo hide the ids better
+         $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
+          var item_ids =[]
          // the sorted data could be a mix of items from multiple sections
 
          var html= '<ul class="list-group"' +'">'
 
          for (var i=0;i<sorted_data.length;i++){
+             item_ids.push(sorted_data[i]._id)
             var items_showing = this.section_manager.json_data[sorted_data[i].parent_id].items_showing
             var title_col =  this.section_manager.json_data[sorted_data[i].parent_id].title_col
             var parent_id = sorted_data[i].parent_id
@@ -515,11 +650,13 @@ class Filter_Manager {
         html+="</ul>"
 
         $("#results_view").html(html)
+        // todo show the ids better
+        $this.show_items(parent_id,item_ids)
         //
         $('#result_wrapper').animate({
                 scrollTop: 0
             }, 1000);
-
+         $this.update_results_info(sorted_data.length)
         run_resize()
     }
 }
