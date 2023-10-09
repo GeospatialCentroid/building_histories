@@ -18,7 +18,7 @@ class Filter_Manager {
         var $this=this
         this.populate_search(json_data)
         $('#list_sort').change(function() {
-           $this.section_manager.list_results($this.section_manager.showing_id)
+           $this.list_results($this.section_manager.showing_id)
         });
 
 
@@ -241,7 +241,6 @@ class Filter_Manager {
                     }
                 }
                 if (meets_criteria==true){
-                        obj.parent_id=i;//store a reference to the parent
                         subset.push(obj)
                 }
             }
@@ -279,7 +278,218 @@ class Filter_Manager {
            $this.filter()
         });
     }
+    //---
+     create_filter_values(section,all_data,group_cols,year_start_col,year_end_col){
+        // set variables to assist with grouping and filtering
+        // a group allows a way to show a whole bunch of features at the same time.
+        //todo add col grouping
+        // year_start_col and year_end_cols allow a way to show change over time
+        var years=[]
+        for (var i=0;i<all_data.length;i++){
+
+            if(year_start_col){
+               years.push(Number(all_data[i][year_start_col]))
+
+            }
+            if(year_end_col && all_data[i][year_end_col]){
+                 years.push(Number(all_data[i][year_end_col]))
+
+            }
+
+        }
+        years.sort()
+        section.start=years[0]
+        section.end=years[years.length-1]
+    }
+    //------- Data slider
+     setup_slider(section_id){
+        var $this=this
+        // show if there is date information
+        var parent_id=section_id.replaceAll('section_id_', '')
+        var section=$this.section_manager.json_data[parent_id]
+
+         $("#slider").slider({
+            min: section.start,
+            max: section.end,
+            range: true,
+            step: 1,
+            values: [section.start, section.end],
+            change: function(event, ui) {
+                 $this.delay_date_change(section_id)
+                 $("#filter_start_date").val( $("#slider").slider("values")[ 0 ])
+                 $("#filter_end_date").val($("#slider").slider("values")[ 1 ])
+            }
+        });
+    }
+
+    slider_toggle() {
+        var $this=this
+        if($("#slider_toggle i").hasClass("bi-pause-fill")){
+            $this.slider_pause()
+            return
+        }
+         $("#slider_toggle i").removeClass("bi-play-fill")
+         $("#slider_toggle i").addClass("bi-pause-fill")
+
+
+        //if we are at the end. start at the beginning
+        if($("#slider").slider("option", "max")==$("#slider").slider("values")[1]){
+             $("#slider").slider('values',1,$("#slider").slider("option", "min"))
+        }
+        $this.slider_step()
+    }
+   slider_step() {
+        var $this=this
+        var curr_position=$("#slider").slider("values")[1]
+        var next_position=curr_position+5
+        if(next_position>$("#slider").slider("option", "max")){
+            next_position=$("#slider").slider("option", "max")
+        }
+        $("#slider").slider('values',1,next_position).trigger('change');
+        //if we are at the end. start at the beginning
+        if($("#slider").slider("option", "max")==curr_position){
+              $this.slider_pause()
+              return
+        }
+
+        $this.slider_timeout=setTimeout(function(){
+        $this.slider_step()
+        },300)
+    }
+    slider_pause() {
+        //stop the timer
+        $("#slider_toggle i").removeClass("bi-pause-fill")
+        $("#slider_toggle i").addClass("bi-play-fill")
+        clearTimeout(this.slider_timeout);
+    }
+    //
+     delay_date_change(section_id){
+        var $this=this
+        // prevent multiple calls when editing filter parameters
+        if(this.timeout){
+            clearTimeout(this.timeout);
+        }
+        this.timeout=setTimeout(function(){
+              $this.update_date_filter(section_id)
+              $this.timeout=false
+
+        },300)
+     }
+     update_date_filter(section_id){
+         var $this=this
+         var start = $("#slider").slider("values")[ 0 ]
+         var end = $("#slider").slider("values")[ 1 ]
+         var item_ids =  $this.get_results_between(section_id,start,end);
+
+         var parent_id=section_id.replaceAll('section_id_', '')
+         // note: the section manager still tracks the items_showing
+         var items_showing=$this.section_manager.json_data[parent_id].items_showing;
+         $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
+         $this.show_items(parent_id,item_ids)
+     }
+    //-----------
+    show_section(section_id){
+        var $this=this
+        var parent_id=section_id.replaceAll('section_id_', '')
+        console.log(section_id)
+        var data = $this.section_manager.get_match(section_id)
+
+        var item_ids=[]
+
+         var items_showing=$this.section_manager.json_data[parent_id].items_showing
+         if($('#'+"section_id_"+parent_id).is(':checked')){
+            for (var i=0;i<data.length;i++){
+                if(data[i]?.feature){
+                    if($.inArray( data[i]._id, items_showing)==-1){
+                        item_ids.push(data[i]._id);
+                    }else{
+                        console.log("ALREADY IN ARRAY ",data[i]._id)
+                    }
+                }
+            }
+         }else{
+            // we are hiding, take all showing features
+            item_ids= [...items_showing]
+         }
+         $this.show_items(parent_id,item_ids)
+         layer_manager.map.fitBounds(layer_manager.layers[layer_manager.layers.length-1].layer_obj.getBounds());
+    }
+
+    get_results_between(section_id,start,end){
+        var $this=this;
+        var parent_id=section_id.replaceAll('section_id_', '')
+        var section=$this.section_manager.json_data[parent_id]
+        var data=$this.section_manager.json_data[parent_id].all_data
+
+        // get a list of all the features that have a start value greater than or equal to the start
+                 // and an end value less than or equal to the end value
+                 // if no end value set it to latest value
+        var item_ids=[]
+        for (var i=0;i<data.length;i++){
+            var meets_criteria =true
+            var val = Number(data[i][section.year_start_col])
+            if (val<start || val>end){
+                 meets_criteria=false
+            }
+           if (meets_criteria && data[i]?.feature){
+            item_ids.push(data[i]._id)
+           }
+        }
+        return item_ids
+    }
+    list_results(parent_id){
+        var $this = this
+        $this.section_manager.showing_id=parent_id
+        $this.section_manager.slide_position("results")
+        //move to the results panel and list all the items
+        // each items visibility is stored in the filter manager - if showing
+
+        var items_showing=$this.section_manager.json_data[parent_id].items_showing
+        var data = $this.section_manager.get_match('section_id_'+parent_id)
+        var title_col=$this.section_manager.json_data[parent_id]["title_col"]
+        $this.sort_data(data,title_col)
+    }
+    sort_data(data,sort_col){
+
+        var sort_dir=$('#list_sort').val()
+
+        var sorted_data= [...data]
+
+       if(sort_dir!=''){
+           sorted_data= sorted_data.sort((a,b) => (a[sort_col] > b[sort_col] ) ? 1 : ((b[sort_col]  > a[sort_col] ) ? -1 : 0))
+        }
+        if (sort_dir=='desc'){
+              sorted_data.reverse()
+        }
+
+        this.show_results(sorted_data)
+    }
+
+    show_items(_id,item_ids){
+        //toggle the layer but only show the specific item id
+        // note: we'll want to pass an array of ids to
+        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(this.section_manager.json_data[_id].drawing_info.replaceAll('\n', '')),false,false,item_ids)
+    }
+    zoom_item(_id,item_id){
+          var data = this.section_manager.get_match('section_id_'+_id)
+            for (var i=0;i<data.length;i++){
+                if(item_id==data[i]._id){
+                    if(data[i]?.feature){
+                      map_manager.map_zoom_event(L.geoJSON(data[i].feature).getBounds())
+                    }
+
+                    break
+                }
+
+            }
+    }
+
+
+
+    //--
      show_results(sorted_data){
+         // the sorted data could be a mix of items from multiple sections
+
          var html= '<ul class="list-group"' +'">'
 
          for (var i=0;i<sorted_data.length;i++){
@@ -293,10 +503,8 @@ class Filter_Manager {
              }
              html += "<li class='list-group-item d-flex justify-content-between list-group-item-action'>"
              if(sorted_data[i]?.feature){
-                 console.log(sorted_data[i])
-                   console.log(sorted_data[i]._id)
-                 html+='<span style="cursor: pointer;" onclick="section_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
-                 html+='<span><div class="form-check"  onclick="section_manager.show_item('+parent_id+','+sorted_data[i]._id+')"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
+                 html+='<span style="cursor: pointer;" onclick="filter_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
+                 html+='<span><div class="form-check"  onclick="filter_manager.show_items('+parent_id+',['+sorted_data[i]._id+'])"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
              }else{
                   html+=sorted_data[i][title_col]
              }
@@ -307,6 +515,11 @@ class Filter_Manager {
         html+="</ul>"
 
         $("#results_view").html(html)
+        //
+        $('#result_wrapper').animate({
+                scrollTop: 0
+            }, 1000);
 
+        run_resize()
     }
 }

@@ -89,6 +89,11 @@ class Section_Manager {
           if(all_data_loaded){
             console.log("we have all the data")
             $this.join_data($this.json_data[slot[0]])
+            //add parent_id to each item
+            var all_data=$this.json_data[slot[0]].all_data
+            for (var i=0;i<all_data.length;i++){
+               all_data[i].parent_id=slot[0]// create a reference to the for mix and match filtering
+              }
             //todo create nav with section_name
             //todo pass variables from app.csv
 
@@ -156,7 +161,7 @@ class Section_Manager {
                           return item.trim();
                         });
                     this.update_geojson_properties(section.all_data,show_cols,section?.image_col)
-                    this.create_filter_values(section,section.all_data,group_cols,section?.year_start_col,section?.year_end_col);
+                    filter_manager.create_filter_values(section,section.all_data,group_cols,section?.year_start_col,section?.year_end_col);
                 }
                 //console.log("second data",section.data[j].data,section.data[j][1])
 
@@ -169,6 +174,7 @@ class Section_Manager {
         for (var i=0;i<all_data.length;i++){
             // inject an id for access
             all_data[i]._id=i
+
             var left_join_val=all_data[i][left_join_col].toLowerCase()
             for (var j=0;j<data_to_join.features.length;j++){
                 //console.log(data_to_join.features[j].properties[right_join_col],"values")
@@ -241,28 +247,7 @@ class Section_Manager {
 
         }
     }
-    create_filter_values(section,all_data,group_cols,year_start_col,year_end_col){
-        // set varaible to assist with grouping and filtering
-        // a group allows a way to show a whole bunch of features at the same time.
-        //todo add col grouping
-        // year_start_col and year_end_cols allow a way to show change over time
-        var years=[]
-        for (var i=0;i<all_data.length;i++){
 
-            if(year_start_col){
-               years.push(Number(all_data[i][year_start_col]))
-
-            }
-            if(year_end_col && all_data[i][year_end_col]){
-                 years.push(Number(all_data[i][year_end_col]))
-
-            }
-
-        }
-        years.sort()
-        section.start=years[0]
-        section.end=years[years.length-1]
-    }
     setup_interface(){
         this.list_sections()
         run_resize()
@@ -286,7 +271,7 @@ class Section_Manager {
                 html+=">"
                 html+= this.json_data[i]["section_name"]
                 html+='<div class="float-end input-group-text"><span class="form-check" ><input class="form-check-input section_check" type="checkbox" value="" id="section_id_'+id+'" ></span>'
-                html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='section_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
+                html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='filter_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
              html+="</div>"
 
              html+="</li>"
@@ -295,218 +280,13 @@ class Section_Manager {
 
         $("#sections_view").html(html)
         $(".section_check").change(function() {
-            section_manager.show_section($(this).attr('id'))
-             section_manager.setup_slider($(this).attr('id'))
+            filter_manager.show_section($(this).attr('id'))
+             filter_manager.setup_slider($(this).attr('id'))
 
         });
 
     }
-    show_section(section_id){
-        var $this=section_manager
-        var parent_id=section_id.replaceAll('section_id_', '')
-        console.log(section_id)
-        var data = $this.get_match(section_id)
 
-        var item_ids=[]
-
-         var items_showing=section_manager.json_data[parent_id].items_showing
-         if($('#'+"section_id_"+parent_id).is(':checked')){
-            for (var i=0;i<data.length;i++){
-                if(data[i]?.feature){
-                    if($.inArray( data[i]._id, items_showing)==-1){
-                        item_ids.push(data[i]._id);
-                    }else{
-                        console.log("ALREADY IN ARRAY ",data[i]._id)
-                    }
-                }
-            }
-         }else{
-            // we are hiding, take all showing features
-            item_ids= [...items_showing]
-         }
-         $this.show_items(parent_id,item_ids)
-         layer_manager.map.fitBounds(layer_manager.layers[layer_manager.layers.length-1].layer_obj.getBounds());
-    }
-    setup_slider(section_id){
-        var parent_id=section_id.replaceAll('section_id_', '')
-        var section=section_manager.json_data[parent_id]
-        var $this=section_manager
-        console.log(section.start, section.end)
-         $("#slider").slider({
-            min: section.start,
-            max: section.end,
-            range: true,
-            step: 1,
-            values: [section.start, section.end],
-            change: function(event, ui) {
-                 $this.delay_date_change(section_id)
-                 $("#filter_start_date").val( $("#slider").slider("values")[ 0 ])
-                 $("#filter_end_date").val($("#slider").slider("values")[ 1 ])
-            }
-        });
-    }
-
-
-    slider_toggle() {
-        console.log("slide start",$("#slider_toggle i").hasClass("bi-pause-fill"))
-        if($("#slider_toggle i").hasClass("bi-pause-fill")){
-            section_manager.slider_pause()
-            return
-        }
-         $("#slider_toggle i").removeClass("bi-play-fill")
-         $("#slider_toggle i").addClass("bi-pause-fill")
-
-
-        //if we are at the end. start at the beginning
-        console.log($("#slider").slider("option", "max"),$("#slider").slider("values")[1])
-        if($("#slider").slider("option", "max")==$("#slider").slider("values")[1]){
-             $("#slider").slider('values',1,$("#slider").slider("option", "min"))
-        }
-        section_manager.slider_step()
-    }
-   slider_step() {
-
-        var curr_position=$("#slider").slider("values")[1]
-        var next_position=curr_position+5
-        if(next_position>$("#slider").slider("option", "max")){
-            next_position=$("#slider").slider("option", "max")
-        }
-        $("#slider").slider('values',1,next_position).trigger('change');
-        //if we are at the end. start at the beginning
-        if($("#slider").slider("option", "max")==curr_position){
-              console.log("are at the end")
-              section_manager.slider_pause()
-              return
-        }
-
-        section_manager.slider_timeout=setTimeout(function(){
-        section_manager.slider_step()
-        },300)
-    }
-    slider_pause() {
-        //stop the timer
-        $("#slider_toggle i").removeClass("bi-pause-fill")
-        $("#slider_toggle i").addClass("bi-play-fill")
-        clearTimeout(section_manager.slider_timeout);
-    }
-    //
-     delay_date_change(section_id){
-        var $this=this
-        // prevent multiple calls when editing filter parameters
-        if(this.timeout){
-            clearTimeout(this.timeout);
-        }
-        this.timeout=setTimeout(function(){
-              $this.update_date_filter(section_id)
-              $this.timeout=false
-
-        },300)
-     }
-     update_date_filter(section_id){
-         var $this=this
-         var start = $("#slider").slider("values")[ 0 ]
-         var end = $("#slider").slider("values")[ 1 ]
-         var item_ids =  $this.get_results_between(section_id,start,end);
-
-         var parent_id=section_id.replaceAll('section_id_', '')
-
-         var items_showing=$this.json_data[parent_id].items_showing;
-          $this.show_items(parent_id,[...$this.json_data[parent_id].items_showing])
-          $this.show_items(parent_id,item_ids)
-     }
-    get_results_between(section_id,start,end){
-        var parent_id=section_id.replaceAll('section_id_', '')
-        var section=section_manager.json_data[parent_id]
-        var data=section_manager.json_data[parent_id].all_data
-
-        // get a list of all the features that have a start value greater than or equal to the start
-                 // and an end value less than or equal to the end value
-                 // if no end value set it to latest value
-        var item_ids=[]
-        for (var i=0;i<data.length;i++){
-            var meets_criteria =true
-            var val = Number(data[i][section.year_start_col])
-            if (val<start || val>end){
-                 meets_criteria=false
-            }
-           if (meets_criteria && data[i]?.feature){
-            item_ids.push(data[i]._id)
-           }
-        }
-        return item_ids
-    }
-
-    list_results(parent_id){
-        var $this = section_manager
-        $this.showing_id=parent_id
-        $this.slide_position("results")
-        //move to the results panel and list all the items
-        // each items visibility is stored in the filter manager - if showing
-
-        var items_showing=$this.json_data[parent_id].items_showing
-        var data = $this.get_match('section_id_'+parent_id)
-        var sort_dir=$('#list_sort').val()
-        var title_col=$this.json_data[parent_id]["title_col"]
-        var sorted_data= [...data]
-
-       if(sort_dir!=''){
-           sorted_data= sorted_data.sort((a,b) => (a[title_col] > b[title_col] ) ? 1 : ((b[title_col]  > a[title_col] ) ? -1 : 0))
-        }
-        if (sort_dir=='desc'){
-              sorted_data.reverse()
-        }
-
-         var html= '<ul class="list-group"' +'">'
-
-         for (var i=0;i<sorted_data.length;i++){
-             var showing=""
-
-             if($.inArray( sorted_data[i]._id, items_showing)>-1){
-                //check if the item is showing
-                showing="checked"
-             }
-             html += "<li class='list-group-item d-flex justify-content-between list-group-item-action'>"
-             if(sorted_data[i]?.feature){
-
-                 html+='<span style="cursor: pointer;" onclick="section_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
-                 html+='<span><div class="form-check"  onclick="section_manager.show_items('+parent_id+',['+sorted_data[i]._id+'])"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
-             }else{
-                  html+=sorted_data[i][title_col]
-             }
-             html+="</span>"
-
-             html+="</li>"
-        }
-        html+="</ul>"
-
-        $("#results_view").html(html)
-        //
-        $('#result_wrapper').animate({
-                scrollTop: 0
-            }, 1000);
-
-        run_resize()
-    }
-    show_items(_id,item_id){
-        var $this = section_manager
-        //toggle the layer but only show the specific item id
-        // note: we'll want to pass an array of ids to
-        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse($this.json_data[_id].drawing_info.replaceAll('\n', '')),false,false,item_id)
-    }
-    zoom_item(_id,item_id){
-        var $this = section_manager
-          var data = $this.get_match('section_id_'+_id)
-            for (var i=0;i<data.length;i++){
-                if(item_id==data[i]._id){
-                    if(data[i]?.feature){
-                      map_manager.map_zoom_event(L.geoJSON(data[i].feature).getBounds())
-                    }
-
-                    break
-                }
-
-            }
-    }
     get_match(_id){
         _id=_id.replaceAll('section_id_', '')
         return this.json_data[_id].all_data
