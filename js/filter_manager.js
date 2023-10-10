@@ -55,20 +55,6 @@ class Filter_Manager {
             }
         })
 
-
-//    $('#filter_bounds_checkbox').change(
-//        function(){
-//             filter_manager.update_bounds_search($(this))
-//        }
-//    );
-//    //
-//    //date search
-//    $('#filter_date_checkbox').change(
-//        function(){
-//          filter_manager.delay_date_change();
-//        }
-//    );
-
     }
     update_results_info(num){
 
@@ -364,7 +350,7 @@ class Filter_Manager {
                       min: min,
                       max: max,
                       values: [ min, max ],
-                      slide: function( event, ui ) {
+                      change: function( event, ui ) {
                         var id = $(this).attr('id')
                         var _id= id.substring(0,id.length-ext.length)
                         //set handle values
@@ -426,112 +412,58 @@ class Filter_Manager {
         var _id = id.replaceAll(" ", "__");
         var html=""
         html+="<label class='form-label' for='"+_id+"'>"+id+"</label>"
-        html+="<div id='"+_id+"_slider' class='slider-range'><div id='"+_id+"_slider_handle0' class='ui-slider-handle'>"+min+"</div><div id='"+_id+"_slider_handle1' class='ui-slider-handle'>"+max+"</div></div>"
+        html+="<div id='"+_id+"_slider' class='slider-range'><div id='"+_id+"_slider_handle0' class='ui-slider-handle'>"+min+"</div><div id='"+_id+"_slider_handle1' class='ui-slider-handle'>"+max+"</div>"
+          html+='<button class="btn btn-outline-secondary slider_toggle " onclick="filter_manager.slider_toggle(this)" type="button" ><i class="bi bi-play-fill"></i></button>'
+          html+="</div>"
         return html
     }
-    //------- Date slider
-     setup_slider(section_id){
+    //------- animate slider
+
+    slider_toggle(_this) {
+        console.log(_this)
         var $this=this
-        $("#filter_date_checkbox").prop( "checked", false );
-
-        // show if there is date information
-        var parent_id=section_id.replaceAll('section_id_', '')
-        var section=$this.section_manager.json_data[parent_id]
-
-         $("#slider").slider({
-            min: section.start,
-            max: section.end,
-            range: true,
-            step: 1,
-            values: [section.start, section.end],
-            change: function(event, ui) {
-                 $this.delay_date_change()
-                 $("#filter_start_date").val( $("#slider").slider("values")[ 0 ])
-                 $("#filter_end_date").val($("#slider").slider("values")[ 1 ])
-            }
-        });
-        //set initial date value
-        $("#filter_start_date").val( section.start)
-         $("#filter_end_date").val(section.end)
-    }
-
-    slider_toggle() {
-        var $this=this
-        if($("#slider_toggle i").hasClass("bi-pause-fill")){
-            $this.slider_pause()
+        var icon=$(_this).children("i")
+        if(icon.hasClass("bi-pause-fill")){
+            $this.slider_pause(icon)
             return
         }
-        $("#filter_date_checkbox").prop( "checked", true );
-         $("#slider_toggle i").removeClass("bi-play-fill")
-         $("#slider_toggle i").addClass("bi-pause-fill")
+        icon.removeClass("bi-play-fill")
+        icon.addClass("bi-pause-fill")
 
+        var slider=$(_this).parent(".slider-range")
 
         //if we are at the end. start at the beginning
-        if($("#slider").slider("option", "max")==$("#slider").slider("values")[1]){
-             $("#slider").slider('values',1,$("#slider").slider("option", "min"))
+        if(slider.slider("option", "max")==slider.slider("values")[1]){
+            slider.slider('values',1,slider.slider("option", "min"))
         }
-        $this.slider_step()
+        $this.slider_step(slider,icon)
     }
-   slider_step() {
+   slider_step(_slider,_icon) {
         var $this=this
-        var curr_position=$("#slider").slider("values")[1]
+        var curr_position=_slider.slider("values")[1]
         var next_position=curr_position+5
-        if(next_position>$("#slider").slider("option", "max")){
-            next_position=$("#slider").slider("option", "max")
+        if(next_position>_slider.slider("option", "max")){
+            next_position=_slider.slider("option", "max")
         }
-        $("#slider").slider('values',1,next_position).trigger('change');
+       _slider.slider('values',1,next_position).trigger('change');
         //if we are at the end. start at the beginning
-        if($("#slider").slider("option", "max")==curr_position){
-              $this.slider_pause()
+        if(_slider.slider("option", "max")==curr_position){
+              $this.slider_pause(_icon)
               return
         }
 
         $this.slider_timeout=setTimeout(function(){
-        $this.slider_step()
+        $this.slider_step(_slider,_icon)
         },300)
     }
-    slider_pause() {
+    slider_pause(_icon) {
+        console.log("slider_pause",_icon)
         //stop the timer
-        $("#slider_toggle i").removeClass("bi-pause-fill")
-        $("#slider_toggle i").addClass("bi-play-fill")
+       _icon.removeClass("bi-pause-fill")
+       _icon.addClass("bi-play-fill")
         clearTimeout(this.slider_timeout);
     }
-    //
-     delay_date_change(){
-        var $this=this
-        // prevent multiple calls when editing filter parameters
-        if(this.timeout){
-            clearTimeout(this.timeout);
-        }
-        this.timeout=setTimeout(function(){
-              $this.update_date_filter()
-              $this.timeout=false
-
-        },300)
-     }
-     update_date_filter(){
-        var $this=this
-        if ($('#filter_date_checkbox').is(':checked')){
-//
-//            var section_id=$this.showing_id
-             var start = $("#slider").slider("values")[ 0 ]
-             var end = $("#slider").slider("values")[ 1 ]
-//             var item_ids =  $this.get_results_between(section_id,start,end);
-//
-//             var parent_id=section_id.replaceAll('section_id_', '')
-//             // note: the section manager still tracks the items_showing
-//             var items_showing=$this.section_manager.json_data[parent_id].items_showing;
-//             $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
-//             $this.show_items(parent_id,item_ids)
-                // todo make this dynamic based on the date column
-                $this.add_filter('Date built',[start,end])
-               $this.filter(this.showing_id);
-         }else{
-            console.log("So the rest of the ids")
-             $this.add_filter('Date built',null)
-             $this.filter(this.showing_id);
-         }
-     }
+    
     //-----------
     show_section(section_id){
         var $this=this

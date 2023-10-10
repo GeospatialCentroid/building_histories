@@ -282,7 +282,6 @@ class Section_Manager {
         $("#sections_view").html(html)
         $(".section_check").change(function() {
             filter_manager.show_section($(this).attr('id'))
-             filter_manager.setup_slider($(this).attr('id'))
 
         });
 

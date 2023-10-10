@@ -41,7 +41,7 @@ class Map_Manager {
     this.highlighted_feature;
     this.highlighted_rect;
 
-   var options ={}//default L.CRS.EPSG3857, messy crs: L.CRS.EPSG4326
+   var options ={maxZoom: 19,}//default L.CRS.EPSG3857, messy crs: L.CRS.EPSG4326
 
     this.map = L.map('map',options).setView([this.lat, this.lng], this.z);
 
