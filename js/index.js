@@ -52,7 +52,10 @@ function initialize_interface(){
     analytics_manager = new Analytics_Manager();
 
     section_manager=new Section_Manager({config:"app.csv"})
-    filter_manager = new Filter_Manager({section_manager:section_manager});
+    filter_manager = new Filter_Manager({
+    section_manager:section_manager,
+    place_url:'https://nominatim.openstreetmap.org/search?format=json',
+    });
     section_manager.init();
 }
 
@@ -105,25 +108,25 @@ function setup_map(){
 
 }
 
-//function after_filters(){
-//
-//   run_resize()
-//    add_back_but_support();
-//
-//    //    disclaimer_manager.init();
-//
-//    //    download_manager.init();
-//
-//    init_tabs();
-//    if ( layer_manager.layers_list){
-//         for (var i =0;i<layer_manager.layers_list.length;i++){
-//            console.log(layer_manager.layers_list[i])
-//            layer_manager.toggle_layer(layer_manager.layers_list[i].id,i)
-//        }
-//    }
-//
-//
-//}
+function after_filters(){
+
+    run_resize()
+    add_back_but_support();
+
+    //    disclaimer_manager.init();
+
+    //    download_manager.init();
+
+    init_tabs();
+    if ( layer_manager.layers_list){
+         for (var i =0;i<layer_manager.layers_list.length;i++){
+            console.log(layer_manager.layers_list[i])
+            layer_manager.toggle_layer(layer_manager.layers_list[i].id,i)
+        }
+    }
+
+
+}
 
 
 function init_tabs(){
@@ -142,7 +145,7 @@ function init_tabs(){
          save_params()
 
     });
-     filter_manager.slide_position()
+    section_manager.slide_position()
     // click the tab and slide to the panel as appropriate
     if( !$.isEmptyObject(usp) && usp.get("t")){
 
@@ -224,9 +227,10 @@ function run_resize(){
            map_manager.map.invalidateSize()
     },100)
         //update the height of the results area when a change occurs
-        $('#side_header').bind('resize', function(){
-        $("#result_wrapper").height($("#panels").height()-$("#result_total").height()- $('#side_header'))
-    });
+//        $('#side_header').bind('resize', function(){
+//
+//    });
+
 }
 function window_resize() {
         var data_table_height=0
@@ -234,20 +238,20 @@ function window_resize() {
            data_table_height= $("#data_table_wrapper").height()
         }
         var header_height=$("#header").outerHeight()+20;
+        var footer_height=$("#footer").outerHeight()
         var window_height= $(window).outerHeight()
         var window_width= $(window).width()
+        var minus_height=header_height+footer_height
 
-       $("#content").height(window_height-header_height)
+       $("#content").height(window_height-minus_height)
 
-       $("#map_wrapper").height(window_height-header_height-data_table_height)
-       var scroll_height=window_height-header_height-$("#side_header").outerHeight()-$("#tabs").outerHeight()-$("#nav_wrapper").outerHeight()-20
+       $("#map_wrapper").height(window_height-minus_height-data_table_height)
+       var scroll_height=window_height-minus_height-$("#side_header").outerHeight()-$("#tabs").outerHeight()-$("#nav_wrapper").outerHeight()
        $("#panels").height(scroll_height)
        $(".panel").height(scroll_height)
-       $("#result_wrapper").height(scroll_height)
 
-
-        $("#map_panel_wrapper").height(window_height-$("#tabs").height()-header_height)
-        $("#map_panel_scroll").height(window_height-$("#tabs").height()-header_height)
+        $("#map_panel_wrapper").height(window_height-$("#tabs").height()-minus_height)
+        $("#map_panel_scroll").height(window_height-$("#tabs").height()-minus_height)
 
             //
 //       $("#tab_panels").css({'top' : ($("#tabs").height()+header_height) + 'px'});
@@ -293,44 +297,44 @@ function window_resize() {
         // slide to position
          $("#panels").stop(true, true)
          // if we are on the search tab, make sure the viewable panel stays when adjusted
-//        if("search_tab"==$("#tabs").find(".active").attr("id")){
-//            filter_manager.slide_position(filter_manager.panel_name)
-//        }
+        if("search_tab"==$("#tabs").find(".active").attr("id")){
+            section_manager.slide_position(section_manager.panel_name)
+        }
 
+        $("#result_wrapper").height(scroll_height-$("#result_total").height()- $('#side_header').height()-$("#filter_area").height())
 
  }
  function save_params(){
-     console.log("We're not saving anything yet")
-     return
+
     // access the managers and store the info URL sharing
+     var p ="?"
+//     p += "?="+encodeURIComponent(rison.encode(filter_manager.filters))
+       p +="&e="+rison.encode(map_manager.params)
 
-    var p = "?f="+encodeURIComponent(rison.encode(filter_manager.filters))
-    +"&e="+rison.encode(map_manager.params)
 
+//    if(layer_manager && typeof(layer_manager.layers_list)!="undefined"){
+//        p+="&l="+rison.encode(layer_manager.layers_list)
+//    }
 
-    if(layer_manager && typeof(layer_manager.layers_list)!="undefined"){
-        p+="&l="+rison.encode(layer_manager.layers_list)
-    }
+//    p+='&t='+$("#tabs").find(".active").attr("id")
+//    if(typeof(filter_manager.panel_name)!="undefined"){
+//        // add the panel if available
+//        p+="/"+filter_manager.panel_name;
+//    }
+//    if(typeof(filter_manager.display_resource_id)!="undefined"){
+//        // add the display_resource_id if available
+//        p+="/"+filter_manager.display_resource_id;
+//    }
 
-    p+='&t='+$("#tabs").find(".active").attr("id")
-    if(typeof(filter_manager.panel_name)!="undefined"){
-        // add the panel if available
-        p+="/"+filter_manager.panel_name;
-    }
-    if(typeof(filter_manager.display_resource_id)!="undefined"){
-        // add the display_resource_id if available
-        p+="/"+filter_manager.display_resource_id;
-    }
-
-    if (filter_manager.page_rows){
-        p +="&rows="+(filter_manager.page_start+filter_manager.page_rows)
-    }
-    if (filter_manager.page_start){
-        p +="&start=0"
-    }
-    if (filter_manager.sort_str){
-        p +="&sort="+filter_manager.sort_str
-    }
+//    if (filter_manager.page_rows){
+//        p +="&rows="+(filter_manager.page_start+filter_manager.page_rows)
+//    }
+//    if (filter_manager.page_start){
+//        p +="&start=0"
+//    }
+//    if (filter_manager.sort_str){
+//        p +="&sort="+filter_manager.sort_str
+//    }
 //    if (filter_manager.fq_str){
 //        p +="&fq="+filter_manager.fq_str
 //    }

@@ -19,7 +19,7 @@ class Filter_Manager {
         var $this=this
         this.populate_search(json_data)
         $('#list_sort').change(function() {
-           $this.list_results($this.showing_id)
+           $this.show_sorted_results($this.showing_id)
         });
 
 
@@ -43,6 +43,7 @@ class Filter_Manager {
                //go to results
                $this.section_manager.slide_position("results")
             }else{
+                console.log($this.place_url)
                 $.get($this.place_url, { q: $("#search").val() }, function(data) {
                     try{
                         $this.show_place_bounds(data[0].boundingbox)
@@ -56,6 +57,15 @@ class Filter_Manager {
         })
 
     }
+     show_place_bounds(b){
+        var sw = L.latLng(Number(b[0]), Number(b[2])),
+            ne = L.latLng(Number(b[1]), Number(b[3])),
+            bounds = L.latLngBounds(sw, ne);
+            map_manager.map_zoom_event(bounds)
+
+            map_manager.show_copy_link(b[2],b[0],b[3],b[1])
+
+  }
     update_results_info(num){
 
         $(".total_results").text(LANG.RESULT.FOUND+" "+num+" "+LANG.RESULT.RESULTS)
@@ -134,6 +144,12 @@ class Filter_Manager {
            this.remove_filter(_id)
         }
 
+    }
+     remove_filter(_id){
+        var id = _id.replaceAll("__", " ");
+        delete this.filters[id]
+        //remove filter selection
+        //this.remove_filter_selection(_id)
     }
     filter(section_id){
         // create a subset of the items based on the set filters
@@ -232,7 +248,9 @@ class Filter_Manager {
 //        this.add_filter_watcher();
 
         //this.slide_position("results");
-         this.show_results(subset)
+        // keep track of the subset for sorting
+         this.subset_data=subset
+         this.show_sorted_results(subset)
     }
     add_filter_watcher(){
         var $this=this;
@@ -463,7 +481,7 @@ class Filter_Manager {
        _icon.addClass("bi-play-fill")
         clearTimeout(this.slider_timeout);
     }
-    
+
     //-----------
     show_section(section_id){
         var $this=this
@@ -509,7 +527,19 @@ class Filter_Manager {
         var title_col=$this.section_manager.json_data[parent_id]["title_col"]
         $this.sort_data(data,title_col)
     }
+    show_sorted_results(parent_id){
+       //take the subset and short by title
+
+        if(!this.subset_data){
+            this.subset_data=this.section_manager.json_data[parent_id].all_data
+        }
+        this.sort_data(this.subset_data)
+    }
     sort_data(data,sort_col){
+        if(!sort_col){
+            // use the default if none is provided
+            sort_col="_sort_col"
+        }
 
         var sort_dir=$('#list_sort').val()
 
@@ -550,6 +580,7 @@ class Filter_Manager {
      show_results(sorted_data){
         // hide all the items
         var $this = this;
+
         var parent_id=sorted_data[0].parent_id
          // todo hide the ids better
          $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
@@ -557,17 +588,18 @@ class Filter_Manager {
          // the sorted data could be a mix of items from multiple sections
 
          var html= '<ul class="list-group"' +'">'
-
+        var title_col="_sort_col"
          for (var i=0;i<sorted_data.length;i++){
              item_ids.push(sorted_data[i]._id)
             var items_showing = this.section_manager.json_data[sorted_data[i].parent_id].items_showing
-            var title_col =  this.section_manager.json_data[sorted_data[i].parent_id].title_col
+
             var parent_id = sorted_data[i].parent_id
              var showing=""
-             if($.inArray( sorted_data[i]._id, items_showing)>-1){
-                //check if the item is showing
-                showing="checked"
-             }
+//             if($.inArray( sorted_data[i]._id, items_showing)>-1){
+//                //check if the item is showing
+//
+//             }
+             showing="checked";//we're showing them all for now
              html += "<li class='list-group-item d-flex justify-content-between list-group-item-action'>"
              if(sorted_data[i]?.feature){
                  html+='<span style="cursor: pointer;" onclick="filter_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'

@@ -153,7 +153,7 @@ class Section_Manager {
                 var data_to_join=section.data[j]
                 var type=data_to_join[1]
                 if(type=="geojson"){
-                    this.join_geojson(section.all_data,data_to_join.data,data_to_join[2],data_to_join[3])
+                    this.join_geojson(section.all_data,data_to_join.data,data_to_join[2],data_to_join[3],section["title_col"])
                     var show_cols=section.show_cols.split(",").map(function(item) {
                           return item.trim();
                         });
@@ -170,11 +170,13 @@ class Section_Manager {
           }
 
     }
-    join_geojson(all_data,data_to_join,left_join_col,right_join_col){
+    join_geojson(all_data,data_to_join,left_join_col,right_join_col,title_col){
 
         for (var i=0;i<all_data.length;i++){
             // inject an id for access
             all_data[i]._id=i
+            //store a sort col for universal access
+             all_data[i]._sort_col= all_data[i][title_col]
 
             var left_join_val=all_data[i][left_join_col].toLowerCase()
             for (var j=0;j<data_to_join.features.length;j++){
@@ -251,7 +253,7 @@ class Section_Manager {
 
     setup_interface(){
         this.list_sections()
-        run_resize()
+         after_filters()
         filter_manager.init_search_interface(this.json_data)
         // if there is only one section, select it and move to results
         if(this.json_data.length==1){
@@ -261,6 +263,7 @@ class Section_Manager {
             }, "100");
 
         }
+
     }
     list_sections(){
          var html= '<ul class="list-group"' +'">'
