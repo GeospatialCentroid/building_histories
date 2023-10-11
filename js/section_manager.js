@@ -60,7 +60,18 @@ class Section_Manager {
         var $this = section_manager
         // convert the csv file to json and create a subset of the records as needed
        // strip any extraneous tabs
-       $this.json_data= $.csv.toObjects(_data.replaceAll('\t', ''))
+       $this.json_data=[]
+       $this.data= $.csv.toObjects(_data.replaceAll('\t', ''))
+       // make sure to only work with the sections
+        for (var i=0; i< $this.data.length;i++){
+            if($this.data[i].type=="section"){
+                $this.json_data.push($this.data[i])
+            }else if ($this.data[i].type=="overlay"){
+
+                 $this.load_data($this.data[i].data,false,$this.map_manager.add_overlay)
+            }
+
+        }
         for (var i=0; i< $this.json_data.length;i++){
              // split files by semi-colon
             $this.json_data[i].data= $this.json_data[i].data.split(";")
@@ -94,21 +105,6 @@ class Section_Manager {
             for (var i=0;i<all_data.length;i++){
                all_data[i].parent_id=slot[0]// create a reference to the for mix and match filtering
               }
-            //todo create nav with section_name
-            //todo pass variables from app.csv
-
-//          section.filter_manager =  new Filter_Manager({
-//
-//            group_col:section.group_col,
-//            image_col:section.image_col,
-//            path_col:section.path_col,
-//            show_cols:section.show_cols,
-//            comma_separated_cols:section.comma_separated_cols,
-//            title_col:section.title_col,
-//            year_end_col:section.year_end_col,
-//            year_start_col:section.year_start_col,
-//            json_data:section.all_data
-//            })
 
              //clean up
               delete section.json_data;
@@ -260,6 +256,7 @@ class Section_Manager {
             setTimeout(() => {
                $("#section_id_0").trigger("click");
                 $("#arrow_0").trigger("click");
+                 $("#nav").hide();
             }, "100");
 
         }
@@ -273,7 +270,7 @@ class Section_Manager {
 //             html +=  "onmouseleave='filter_manager.hide_bounds()' "
 //             html+= "onmouseenter='filter_manager.show_bounds(\""+id+"\")' "
                 html+=">"
-                html+= this.json_data[i]["section_name"]
+                html+= this.json_data[i]["name"]
                 html+='<div class="float-end input-group-text"><span class="form-check" ><input class="form-check-input section_check" type="checkbox" value="" id="section_id_'+id+'" ></span>'
                 html +="<button type='button' class='btn  shadow-none'  style='margin-top: -5px;' onclick='filter_manager.list_results(\""+id+"\")' id='arrow_"+id+"'><i  class='bi bi-chevron-right'></i></button>"
              html+="</div>"

@@ -85,7 +85,7 @@ class Filter_Manager {
             for (var j=0;j<data[i].all_data.length;j++){
                 var item=data[i].all_data[j]
                 this.subset.push({
-                label: item[title_col] +" ("+section_name+")",
+                label: item[title_col], //+" ("+section_name+")",
                 value: i+"_"+j
                  })
 
@@ -558,7 +558,7 @@ class Filter_Manager {
     show_items(_id,item_ids){
         //toggle the layer but only show the specific item id
         // note: we'll want to pass an array of ids to
-        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(this.section_manager.json_data[_id].drawing_info.replaceAll('\n', '')),false,false,item_ids)
+        layer_manager.toggle_layer("section_id_"+_id,"csv_geojson",JSON.parse(this.section_manager.json_data[_id].drawing_info.replaceAll('\n', '')),false,100,item_ids)
     }
     zoom_item(_id,item_id){
           var data = this.section_manager.get_match('section_id_'+_id)
@@ -573,6 +573,22 @@ class Filter_Manager {
 
             }
     }
+    click_item(_id,item_id){
+          var data = this.section_manager.get_match('section_id_'+_id)
+            for (var i=0;i<data.length;i++){
+                if(item_id==data[i]._id){
+                    if(data[i]?.feature){
+                         setTimeout(function(){
+                            map_manager.map_click_event(L.geoJSON(data[i].feature).getBounds().getCenter())
+                            map_manager.show_popup_details(data[i].feature.features)
+                         }, 1500);
+                    }
+
+                    break
+                }
+
+            }
+    }
 
 
 
@@ -580,10 +596,12 @@ class Filter_Manager {
      show_results(sorted_data){
         // hide all the items
         var $this = this;
+        try{
+             var parent_id=sorted_data[0].parent_id
+             // todo hide the ids better
+             $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
+        }catch(e){}
 
-        var parent_id=sorted_data[0].parent_id
-         // todo hide the ids better
-         $this.show_items(parent_id,[...$this.section_manager.json_data[parent_id].items_showing])
           var item_ids =[]
          // the sorted data could be a mix of items from multiple sections
 
@@ -602,7 +620,7 @@ class Filter_Manager {
              showing="checked";//we're showing them all for now
              html += "<li class='list-group-item d-flex justify-content-between list-group-item-action'>"
              if(sorted_data[i]?.feature){
-                 html+='<span style="cursor: pointer;" onclick="filter_manager.zoom_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
+                 html+='<span style="cursor: pointer;" onclick="filter_manager.zoom_item('+parent_id+','+sorted_data[i]._id+');filter_manager.click_item('+parent_id+','+sorted_data[i]._id+')">'+sorted_data[i][title_col]+'</span>'
                  html+='<span><div class="form-check"  onclick="filter_manager.show_items('+parent_id+',['+sorted_data[i]._id+'])"><input class="form-check-input" type="checkbox" '+showing+' value="" id="section_'+parent_id+'_'+sorted_data[i]._id+'" ></div>'
              }else{
                   html+=sorted_data[i][title_col]
@@ -615,7 +633,10 @@ class Filter_Manager {
 
         $("#results_view").html(html)
         // todo show the ids better
-        $this.show_items(parent_id,item_ids)
+        if(item_ids.length>0){
+            $this.show_items(parent_id,item_ids)
+        }
+
         //
         $('#result_wrapper').animate({
                 scrollTop: 0

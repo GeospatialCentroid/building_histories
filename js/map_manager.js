@@ -46,6 +46,8 @@ class Map_Manager {
     this.map = L.map('map',options).setView([this.lat, this.lng], this.z);
 
     L.control.locate({"flyTo":true,"initialZoomLevel":19}).addTo(this.map);
+    var overlay_maps={}
+    this.layer_control = L.control.layers({}, overlay_maps).addTo(this.map);
 
     // create a reference to this for use during interaction
     var $this=this
@@ -88,18 +90,18 @@ class Map_Manager {
     console_log("loaded map!!")
   })
 
-    L.control.ruler({position: 'topleft',}).addTo(this.map);
-
-    this.add_draw_control()
-    //draw control ref: https://github.com/Leaflet/Leaflet.draw , https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html
-     var drawnItems = new L.FeatureGroup();
-     this.map.addLayer(drawnItems);
-     var drawControl = new L.Control.Draw({
-         edit: {
-             featureGroup: drawnItems
-         }
-     });
-     this.map.addControl(drawControl);
+//    L.control.ruler({position: 'topleft',}).addTo(this.map);
+//
+//    this.add_draw_control()
+//    //draw control ref: https://github.com/Leaflet/Leaflet.draw , https://leaflet.github.io/Leaflet.draw/docs/leaflet-draw-latest.html
+//     var drawnItems = new L.FeatureGroup();
+//     this.map.addLayer(drawnItems);
+//     var drawControl = new L.Control.Draw({
+//         edit: {
+//             featureGroup: drawnItems
+//         }
+//     });
+     //this.map.addControl(drawControl);
 
      this.add_legend()
 
@@ -116,6 +118,19 @@ class Map_Manager {
      $this.show_copy_link(b.getWest(),b.getSouth(),b.getEast(),b.getNorth())
 
     });
+  }
+  add_overlay(_data){
+    var $this=map_manager
+    var data =$.csv.toObjects(_data.replaceAll('\t', ''))
+     for (var i=0; i<data.length;i++){
+        //options imageMapLayer tiledMapLayer FeatureLayer DynamicMapLayer
+       var layer = L.esri.tiledMapLayer({
+           url: data[i].URL,
+           maxZoom: 20,
+        })
+        $this.layer_control.addOverlay(layer, data[i].name);
+     }
+
   }
   show_copy_link(w,s,e,n){
      var str =w+","+s+","+e+","+n;
@@ -234,16 +249,15 @@ class Map_Manager {
             if ( layer_manager.layers.length>0){
                 this.selected_layer_id=layer_manager.layers[layer_manager.layers.length-1].id
             }else{
-                console_log("No layers for you!")
+                console.log("No layers for you!")
                 return
             }
 
         }
-
+        console.log(this.selected_layer_id,layer_manager.get_layer_obj(this.selected_layer_id))
         return layer_manager.get_layer_obj(this.selected_layer_id);
     }
     map_click_event(lat_lng,no_page){
-
         var $this=this
         if(lat_lng){
             $this.click_lat_lng=lat_lng
@@ -379,8 +393,9 @@ class Map_Manager {
                 html+="<br/>"
             }
           } else {
-            html = LANG.IDENTIFY.NO_INFORMATION+"<br/>"+layer_select_html
+            html = LANG.IDENTIFY.NO_INFORMATION//+"<br/>"+layer_select_html
           }
+          //
            setTimeout(function(){
                $("#popup_content").html(html)
                 //show the first returned feature
@@ -394,7 +409,6 @@ class Map_Manager {
 
         }
        show_popup_details_show_num(num){
-
         if (!num){
             // default setting
             this.result_num=0
@@ -404,12 +418,15 @@ class Map_Manager {
 
         this.show_highlight_geo_json(this.features[this.result_num])
         var props= this.features[this.result_num].properties
-
         var html=''
+
          for (var p in props){
             if (p !='_id'){
             var val = String(props[p]).hyper_text()
-            html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
+            if(val!=""){
+                 html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
+            }
+
             }
          }
         $("#props_table").html(html)
