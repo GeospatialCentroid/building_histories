@@ -127,6 +127,7 @@ class Map_Manager {
        var layer = L.esri.tiledMapLayer({
            url: data[i].URL,
            maxZoom: 20,
+           useCors:false
         })
         $this.layer_control.addOverlay(layer, data[i].name);
      }
