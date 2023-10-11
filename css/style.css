@@ -206,7 +206,7 @@ warning: #ff1b28
 }
 #result_wrapper{
      border: 1px solid rgba(0,0,0,.15);
-
+     margin-top:10px;
 }
 
 #result_wrapper .content_right{

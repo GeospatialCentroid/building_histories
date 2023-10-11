@@ -28,7 +28,9 @@ class Filter_Manager {
         $("#search_clear").click(function(){
             $("#search").val("")
             //back to browse
-            $this.section_manager.slide_position("browse")
+            $this.add_filter(false,null)
+            $this.filter()
+            //$this.section_manager.slide_position("browse")
         })
         ///--------
         $('input[type=radio][name=search_type]').change(function() {
@@ -96,7 +98,8 @@ class Filter_Manager {
           minLength: 0,
           select: function( event, ui ) {
                 event.preventDefault();
-                $("#search").val(ui.item.label.substring(0,ui.item.label.indexOf("(")-1));
+
+                $("#search").val(ui.item.label)//.substring(0,ui.item.label.indexOf("(")-1));
                 $("#search_but").trigger("click")
             },
         focus: function(event, ui) {

@@ -301,7 +301,7 @@ function window_resize() {
             section_manager.slide_position(section_manager.panel_name)
         }
 
-        $("#result_wrapper").height(scroll_height-$("#result_total").height()- $('#side_header').height()-$("#filter_area").height())
+        $("#result_wrapper").height(scroll_height-$("#filter_area").height())
 
  }
  function save_params(){
