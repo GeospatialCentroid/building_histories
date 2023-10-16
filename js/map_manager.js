@@ -357,7 +357,6 @@ class Map_Manager {
 
            var $this =this
            var layer = this.get_selected_layer()
-           console.log("show pop up details",_features,layer,layer.type)
            if(!layer){
                 this.popup_close()
                 return

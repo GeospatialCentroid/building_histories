@@ -511,6 +511,7 @@ class Layer_Manager {
           }else{
              // only create this layer if it doesn't yet exist
               layer_obj = L.featureGroup();
+              layer_obj.item_to_layer_id=[];//store an id associating the item with the layer id
               layer_obj.layer_options=layer_options
               this.show_csv_geojson_data(layer_obj,_resource_id,item_ids);
           }
@@ -669,15 +670,8 @@ class Layer_Manager {
         style.color= feature.properties.color
          style.opacity= 0
     }
-    // if we don't have an id, add one artificially called '_id'
-    // be sure to exclude this from export
-    if (!feature.properties?.id){
-       //feature.properties._id=unique_id
 
-       feature.id=unique_id
-    }else{
-        feature.properties._id = feature.properties.id
-    }
+    feature.id= feature.features[0].id
     var geo =L.geoJSON(feature, {pane: _resource_id, style: style,
         pointToLayer: function(feature, latlng) {
             return L.marker(latlng, {
@@ -685,8 +679,6 @@ class Layer_Manager {
               });
         },
     })
-    // force a layer id for access
-    geo._leaflet_id = feature.id;
 
      //temp add service options
      layer_obj.service= {options:{url:url}}
@@ -921,8 +913,14 @@ class Layer_Manager {
 
 
                 try{
-                 layer_obj.addLayer($this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false, item_id)
+
+                 var geo = $this.create_geo_feature(data[item_id].feature,_resource_id,layer_obj, false, false)
+
+                 layer_obj.addLayer(geo
                  .bindTooltip(data[item_id].feature.features[0].properties[Object.keys(data[item_id].feature.features[0].properties)[0]]));
+                  // rather than force an id - lets associate the item_id, with the internal leaflet id
+                 layer_obj.item_to_layer_id[item_id]=layer_obj.getLayerId(geo)
+
                  items_showing.push(item_id)
                  }catch(error){
                       console.log(error,"Error trying to create",data[item_id].feature)//JSON.stringify(
@@ -932,7 +930,7 @@ class Layer_Manager {
         }else{
             try{
                 // it's possible a shape Path errors-out when trying to remove, just try to remove it
-                layer_obj.removeLayer(item_id);// note: we need to use the internal id number
+                layer_obj.removeLayer(layer_obj.item_to_layer_id[item_id]);// note: we need to use the internal id number
             }catch(error){
 
             }

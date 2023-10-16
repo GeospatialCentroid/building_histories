@@ -308,10 +308,10 @@ class Filter_Manager {
         this.catalog_counts={}
         for (var i=0;i<_data.length;i++){
             var obj=_data[i]
-            //add a unique id, prepend 'item_' for use as a variable, only do this on first pass
-            if(!this.ids_added){
-              obj["id"]="item_"+i;
-            }
+//            //add a unique id, prepend 'item_' for use as a variable, only do this on first pass
+//            if(!this.ids_added){
+//              obj["id"]="item_"+i;
+//            }
 
             //for (var a in obj){// use instead if we want to filter on all
             for (var j in filter_cols){
@@ -380,6 +380,13 @@ class Filter_Manager {
                         //add the filter
                         $this.add_filter(_id,ui.values)
                         $this.filter()
+                      },
+                      slide: function( event, ui ) {
+                        var id = $(this).attr('id')
+                        var _id= id.substring(0,id.length-ext.length)
+                        //set handle values
+                        $("#"+id+"_handle0").text(ui.values[ 0 ])
+                        $("#"+id+"_handle1").text(ui.values[ 1 ])
                       }
 
                     });
