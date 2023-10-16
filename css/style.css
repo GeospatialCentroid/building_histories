@@ -226,8 +226,8 @@ a.disabled {
 #map_panel_wrapper,#download_panel_wrapper{
 
  display:none;
- width:360px;
- height:100%;
+ width:368px;
+
  background-color: #fff;
 
 }
@@ -240,6 +240,8 @@ a.disabled {
 #map_panel_scroll{
     width:10px;
     float:left;
+     height:200px;
+    overflow:scroll;
 }
 #map_panel_scroll_content{
     width:10px;
@@ -300,7 +302,7 @@ margin-left:-15px;
 }
 
 #layers_wrapper{
-    height:100%
+    height:300px;
 }
 #details_panel{
     font-size: .75rem !important;
@@ -473,10 +475,13 @@ list-style-type: none;
 margin: 0;
 padding: 0;
 width: 100%; }
+
 #sortable_layers li {
 margin: 0 3px 3px 3px;
-padding: 0.4em; padding-left: 1.5em;
-height: 100px;
+padding: 0.4em;
+padding-left: 1.5em;
+padding-right: 1.5em;
+height: 50px;
 }
 
 #sortable_layers li span {
@@ -489,7 +494,7 @@ position: absolute;
 #basemap_layer{
     list-style-type: none;
     /* pad bottom to for color pallet*/
-    height:240px;
+    /*height:240px;*/
 }
 
 .highlight{
@@ -520,7 +525,7 @@ position: absolute;
     margin-bottom: 0px;
 
 }
-.ui-slider .ui-slider-handle {
+#filters .ui-slider .ui-slider-handle {
     width: auto;
     height: auto;
     padding-left: 2px;
@@ -703,7 +708,7 @@ position: absolute;
     width:48px;
     display:inline-table;
     margin-right:5px;
-    margin-top:3px;
+    margin-top:-15px;
     float:right;
 }
 .split_left{

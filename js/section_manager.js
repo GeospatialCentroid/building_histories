@@ -68,7 +68,7 @@ class Section_Manager {
                 $this.json_data.push($this.data[i])
             }else if ($this.data[i].type=="overlay"){
 
-                 $this.load_data($this.data[i].data,false,$this.map_manager.add_overlay)
+                 $this.load_data($this.data[i].data,false,$this.add_overlay,i)
             }
 
         }
@@ -83,6 +83,26 @@ class Section_Manager {
             }
         }
 
+    }
+    add_overlay(_data,_slot){
+
+        var data =$.csv.toObjects(_data.replaceAll('\t', ''))
+        console.log(section_manager.json_data)
+
+            //$this.layer_control.addOverlay(layer, data[i].name);
+
+         for (var i=0; i<data.length;i++){
+            //inject the loaded data
+            var slot=_slot+i//add i to treat each individually
+            section_manager.json_data[slot]={}
+            section_manager.json_data[slot].all_data=data[i]
+            section_manager.json_data[slot].all_data["title_col"]=data[i].name
+            section_manager.json_data[slot].all_data["id"]="section_id_"+slot
+            layer_manager.toggle_layer("section_id_"+slot,"mapservice",false,data[i].URL)
+            //turn down Transparency
+
+            $("#section_id_"+slot+"_slider").slider("value",0)
+         }
     }
     check_section_completion(data,slot){
         // when all the data for a section is loaded, join it together
@@ -252,14 +272,14 @@ class Section_Manager {
          after_filters()
         filter_manager.init_search_interface(this.json_data)
         // if there is only one section, select it and move to results
-        if(this.json_data.length==1){
+        //if(this.json_data.length==1){
             setTimeout(() => {
                $("#section_id_0").trigger("click");
                 $("#arrow_0").trigger("click");
                  $("#nav_wrapper").hide();
             }, "100");
 
-        }
+       // }
 
     }
     list_sections(){

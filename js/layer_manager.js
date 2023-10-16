@@ -33,6 +33,7 @@ class Layer_Manager {
     //  only show the table for specific types
     this.table_types=["esriSFS","esriSMS","esriPMS","esriSLS","vector","GeoJSON","mapserver","feature layer"]
     //
+    var $this=this
     // make the map layers sortable
     // make the map layers sortable
     $("#sortable_layers").sortable({
@@ -73,6 +74,7 @@ class Layer_Manager {
         var id = $(children[i]).attr('id')
         if(typeof(id)!="undefined"){
             var _id = id.substring(0,id.length-ext.length);
+            console.log("update_layer_order",_id)
             this.map.getPane(_id).style.zIndex = i+100;
             layers.push(this.get_layer_obj(_id))
         }
@@ -97,6 +99,8 @@ class Layer_Manager {
     // todo we need to be able to know whether an item is visible or not
 
     if($this.is_on_map(_resource_id) && !item_ids){
+        console.log("all ready on the map...REMOVe")
+
       $this.remove_feature_layer(_resource_id);
 //        $("#"+_resource_id+"_drag").remove();
 //        $this.remove_legend(_resource_id);
@@ -107,6 +111,9 @@ class Layer_Manager {
     }
 
      $this.add_layer(_resource_id,type,drawing_info,url,z,item_ids)
+     if(type!="csv_geojson"){
+        $this.add_to_map_tab(_resource_id,z);
+     }
 
   }
 //  drawing_info_include(data,resource){
@@ -144,19 +151,22 @@ class Layer_Manager {
         var $this = this;
         // use this.layers[] for reference since filter_manager can change with filter response.
         var layer = this.get_layer_obj(_resource_id)
+        console.log(layer)
         if (!layer){
             console_log("No layer to show")
             return
         }
         var resource = layer.resource_obj
+        console.log("resource",resource)
         var o = layer.layer_obj.options
         var id = resource["id"]
+
         var title = resource[filter_manager["title_col"]]
         var title_limit=25
         if(title.length>title_limit){
             title = title.substring(0,title_limit)+"..."
         }
-        var download_link = filter_manager.get_download_link(resource)
+        var download_link = false//filter_manager.get_download_link(resource)
         var dcat_bbox = resource.dcat_bbox
         var add_func = "toggle_layer"
         var add_txt=LANG.RESULT.REMOVE
@@ -166,18 +176,18 @@ class Layer_Manager {
 
          html += this.get_slider_html(id)
         //
-        html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
-        //
-        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+resource[filter_manager['bounds_col']]+"\")'>"+LANG.RESULT.ZOOM+"</button>"
-        if(download_link){
-              html +=download_link;
-         }
-        html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_details(\""+id+"\")'>"+LANG.RESULT.DETAILS+"</button>"
-
-        console_log("the type is ",layer.type)
-        if ($.inArray(layer.type,$this.table_types)>-1){
-            html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='bi bi-table'></i></button>"
-        }
+//        html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
+//        //
+//        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+resource[filter_manager['bounds_col']]+"\")'>"+LANG.RESULT.ZOOM+"</button>"
+//        if(download_link){
+//              html +=download_link;
+//         }
+//        html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_details(\""+id+"\")'>"+LANG.RESULT.DETAILS+"</button>"
+//
+//        console_log("the type is ",layer.type)
+//        if ($.inArray(layer.type,$this.table_types)>-1){
+//            html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='bi bi-table'></i></button>"
+//        }
 
         if (typeof(o.color)!="undefined"){
           html += "<div class='color_box'><input type='text' id='"+id+"_line_color' value='"+o.color+"'/><br/><label for='"+id+"_line_color' >"+LANG.MAP.OUTLINE_COLOR+"</label></div>"
@@ -186,7 +196,7 @@ class Layer_Manager {
          html += "<div class='color_box'><input type='text' id='"+id+"_fill_color' value='"+o.fillColor+"'/><br/><label for='"+id+"_fill_color' >"+LANG.MAP.Fill_COLOR+"</label></div>"
         }
         if ($.inArray(layer.type,["esriPMS","esriSMS"])==-1){
-            html+=this.get_slit_cell_control(id)
+            html+=this.get_slit_cell_control(_resource_id)
         }
 
         html +='</li>'
@@ -227,6 +237,7 @@ class Layer_Manager {
         this.side_by_side.setRightLayers([])
     }
     var layer_obj =  this.get_layer_obj(_resource_id).layer_obj
+    console.log("split with",layer_obj)
     if (side=="right"){
 
         if (this.split_right_layers.length>0){
@@ -334,13 +345,16 @@ class Layer_Manager {
             max: 100,
             value:value,
             range: "min",
-            slide: function( event, ui ) {
+            change: function( event, ui ) {
                  var ext ="_slider"
                  var id = $(this).attr('id')
                  var _id= id.substring(0,id.length-ext.length)
+
+
                  var layer =  $this.get_layer_obj(_id)
+                 console.log("Slider",_id,layer)
                  var val =ui.value/100
-                 var set_opacity=["basemap","Map Service","Raster Layer","tms","","mapserver","map service"]
+                 var set_opacity=["basemap","Map Service","Raster Layer","tms","","mapserver","mapservice"]
                  if($.inArray( layer.type,set_opacity)>-1){
                     layer.layer_obj.setOpacity(val)
                  }else if($.inArray(layer.type,["esriPMS","esriSMS"])>-1){
@@ -367,8 +381,11 @@ class Layer_Manager {
   }
 
   get_layer_obj(_resource_id){
+        console.log(this.layers)
       for(var i =0;i<this.layers.length;i++){
             var temp_layer = this.layers[i]
+
+            console.log(temp_layer,"VS",_resource_id)
             if (temp_layer.id==_resource_id){
                 return temp_layer
 
@@ -421,8 +438,8 @@ class Layer_Manager {
     this.map.getPane(_resource_id).style.zIndex = _z+100;
 
     var service_method = this.get_service_method(_type)
-    console_log("service_method",service_method,_type)
-    console_log(layer_options.url)
+    console.log("service_method",service_method,_type)
+    console.log(layer_options.url)
     //todo attempt overcoming cors
 //     layer_options.url='http://localhost:8000/sr/'+encodeURIComponent(layer_options.url)
      //check for a legend
@@ -438,7 +455,7 @@ class Layer_Manager {
         if (layer_options.url.substring(layer_options.url.length-1) !='/'){
             layer_options.url+="/"
         }
-        filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
+        //filter_manager.load_json(layer_options.url+'legend?f=json',layer_manager.create_legend,_resource_id)
     }
     console_log(service_method,"service_method")
      console_log(layer_options.url)
@@ -517,8 +534,9 @@ class Layer_Manager {
           }
 
       }else{
-        console_log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
+        console.log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
        var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
+        console.log(layer_obj)
       }
 
     }
@@ -758,7 +776,9 @@ class Layer_Manager {
         pane:_resource_id,
         // to enable cursor and click events on raster images
         interactive:true,
-        bubblingMouseEvents: false
+        bubblingMouseEvents: false,
+        maxZoom: 20,
+        useCors:false
       }
       var type;
       var symbol;
@@ -998,7 +1018,7 @@ class Layer_Manager {
          html+= this.get_slider_html("basemap");
          var id = "basemap"
          var fill_color =  rgbStrToHex($(".leaflet-container").css("backgroundColor"))
-         html += "<div class='color_box'><input type='text' id='"+id+"_base_color' value='"+fill_color+"'/><br/><label for='"+id+"_base_color' >"+LANG.BASEMAP.BACKGROUND+"</label></div>"
+         //html += "<div class='color_box'><input type='text' id='"+id+"_base_color' value='"+fill_color+"'/><br/><label for='"+id+"_base_color' >"+LANG.BASEMAP.BACKGROUND+"</label></div>"
 
 
          $("#basemap_layer").html(html)
@@ -1034,15 +1054,15 @@ class Layer_Manager {
         // get all the basemaps and show the images in a dropdown
         var first_item = basemaps[Object.keys(basemaps)[0]];
         var html= "<div class='item_title font-weight-bold'>"+LANG.BASEMAP.TITLE+"</div> "
-        html+= '<button id="basemap_layer_but" style="float:left;max-height:none;" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" title="'+LANG.BASEMAP.TIP+'" data-bs-toggle="dropdown" aria-expanded="false">'
+        html+= '<div class="btn-group dropup"><button id="basemap_layer_but" style="float:left;max-height:none;" class="btn btn-primary dropdown-toggle " type="button" data-toggle="dropdown" title="'+LANG.BASEMAP.TIP+'" data-bs-toggle="dropdown" aria-expanded="false">'
         html+='<img id="basemap_layer_img" class="thumbnail_small" src="'+first_item.image+'"/>'
         html+='</button>'
-        html+= '<ul id="basemap_layer_dropdown" class="dropdown-menu" aria-labelledby="basemap_layer_but">'
+        html+= '<ul id="basemap_layer_dropdown" class="dropdown-menu" style="max-height:250px;overflow:scroll;" aria-labelledby="basemap_layer_but">'
         for(var b in basemaps){
 
             html+= '<li value="'+b+'"><div><a class="dropdown-item"><img alt="'+basemaps[b].title+'" class="thumbnail" src="'+basemaps[b].image+'"/></a><span>'+basemaps[b].title+'</span></div></li>'
         }
-        html+='</ul>'
+        html+='</ul></div>'
         return html
 
     }

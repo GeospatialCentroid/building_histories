@@ -46,8 +46,6 @@ class Map_Manager {
     this.map = L.map('map',options).setView([this.lat, this.lng], this.z);
 
     L.control.locate({"flyTo":true,"initialZoomLevel":19}).addTo(this.map);
-    var overlay_maps={}
-    this.layer_control = L.control.layers({}, overlay_maps).addTo(this.map);
 
     // create a reference to this for use during interaction
     var $this=this
@@ -119,20 +117,7 @@ class Map_Manager {
 
     });
   }
-  add_overlay(_data){
-    var $this=map_manager
-    var data =$.csv.toObjects(_data.replaceAll('\t', ''))
-     for (var i=0; i<data.length;i++){
-        //options imageMapLayer tiledMapLayer FeatureLayer DynamicMapLayer
-       var layer = L.esri.tiledMapLayer({
-           url: data[i].URL,
-           maxZoom: 20,
-           useCors:false
-        })
-        $this.layer_control.addOverlay(layer, data[i].name);
-     }
 
-  }
   show_copy_link(w,s,e,n){
      var str =w+","+s+","+e+","+n;
      var copy_link =" <a href='javascript:navigator.clipboard.writeText(\""+str+"\")' >copy</a>"

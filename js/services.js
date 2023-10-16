@@ -1,7 +1,7 @@
 var services = [
 {
-"name": "map service",
-"ref": "urn:x-esri:serviceType:ArcGIS#TiledMapLayer",
+"name": "mapservice",
+"ref": "mapservice",
 "_class": "esri",
 "_method": "tiledMapLayer"
 },

@@ -55,6 +55,7 @@ function initialize_interface(){
     filter_manager = new Filter_Manager({
     section_manager:section_manager,
     place_url:'https://nominatim.openstreetmap.org/search?format=json',
+    title_col:"title_col"//universal location for a title
     });
     section_manager.init();
 }
@@ -102,6 +103,7 @@ function setup_map(){
         map:map_manager.map,
         layers_list:params['l'],
         service_method:services//loaded in html
+
       })
 
       layer_manager.add_basemap_control()
@@ -250,8 +252,8 @@ function window_resize() {
        $("#panels").height(scroll_height)
        $(".panel").height(scroll_height)
 
-        $("#map_panel_wrapper").height(window_height-$("#tabs").height()-minus_height)
-        $("#map_panel_scroll").height(window_height-$("#tabs").height()-minus_height)
+//        $("#map_panel_wrapper").height(window_height-$("#tabs").height()-minus_height)
+//        $("#map_panel_scroll").height(window_height-$("#tabs").height()-minus_height)
 
             //
 //       $("#tab_panels").css({'top' : ($("#tabs").height()+header_height) + 'px'});
