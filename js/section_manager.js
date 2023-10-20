@@ -66,6 +66,13 @@ class Section_Manager {
         for (var i=0; i< $this.data.length;i++){
             if($this.data[i].type=="section"){
                 $this.json_data.push($this.data[i])
+                // to do make this more robust
+                //check if there is a disclaimer
+                if($this.data[i]?.disclaimer){
+                    $this.setup_disclaimer($this.data[i],i)
+                }
+
+
             }else if ($this.data[i].type=="overlay"){
 
                  $this.load_data($this.data[i].data,false,$this.add_overlay,i)
@@ -82,6 +89,28 @@ class Section_Manager {
                 $this.load_data($this.json_data[i].data[j][0],$this.json_data[i].data[j][1],$this.check_section_completion,[i,j])
             }
         }
+
+    }
+    setup_disclaimer(_data,_id){
+        $('#disclaimer_heading').html(_data.name);
+        $('#disclaimer_text').html(_data.disclaimer);
+
+        if(typeof($.cookie("disclaimer_"+_id)) =='undefined'){
+            $('#disclaimer').modal('show');
+        }else{
+            $("#disclaimer_dont_show_again_checkbox" ).prop("checked", true );
+        }
+         $("#disclaimer_dont_show_again").html(LANG.DISCLAIMER.DONT_SHOW_AGAIN)
+        $("#disclaimer_dont_show_again_checkbox").on("click", function(){
+           if($("#disclaimer_dont_show_again_checkbox").is(':checked')){
+            $.cookie("disclaimer_"+_id,'hide')
+           }else{
+            $.removeCookie("disclaimer_"+_id, { path: '/' });
+           }
+            console.log( $.cookie("disclaimer_"+_id))
+        })
+        $("#info_but").on("click", function(){ $('#disclaimer').modal('show');})
+        $("#info_but").show()
 
     }
     add_overlay(_data,_slot){
@@ -101,7 +130,7 @@ class Section_Manager {
             layer_manager.toggle_layer("section_id_"+slot,"mapservice",false,data[i].URL)
             //turn down Transparency
 
-            $("#section_id_"+slot+"_slider").slider("value",0)
+            //$("#section_id_"+slot+"_slider").slider("value",0)
          }
     }
     check_section_completion(data,slot){

@@ -156,6 +156,7 @@ function init_tabs(){
 }
 
 function move_to_tab(tab_str){
+    return
     var tab_parts = tab_str.split("/")
 
     // move to the set search panel

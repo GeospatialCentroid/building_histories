@@ -151,13 +151,13 @@ class Layer_Manager {
         var $this = this;
         // use this.layers[] for reference since filter_manager can change with filter response.
         var layer = this.get_layer_obj(_resource_id)
-        console.log(layer)
+
         if (!layer){
             console_log("No layer to show")
             return
         }
         var resource = layer.resource_obj
-        console.log("resource",resource)
+
         var o = layer.layer_obj.options
         var id = resource["id"]
 
@@ -169,14 +169,16 @@ class Layer_Manager {
         var download_link = false//filter_manager.get_download_link(resource)
         var dcat_bbox = resource.dcat_bbox
         var add_func = "toggle_layer"
-        var add_txt=LANG.RESULT.REMOVE
+        var add_txt=LANG.RESULT.ADD
         var html = "<li class='ui-state-default drag_li' id='"+id+"_drag'>"
-        html+="<div class='grip'><i class='fas fa-grip-vertical'></i></div>"
-        html +="<div class='item_title font-weight-bold'>"+title+"</span></div>"
+        html+="<div class='grip'><i class='bi bi-grip-vertical'></i></div>"
+        html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager.add_layer_toggle(this)'>"+add_txt+"</button>"
+
+        html +="<div class='item_title font-weight-bold inline'>"+title+"</span></div>"
 
          html += this.get_slider_html(id)
         //
-//        html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
+        //html +="<button type='button' id='"+id+"_toggle' class='btn btn-primary "+id+"_toggle' onclick='layer_manager."+add_func+"(\""+id+"\")'>"+add_txt+"</button>"
 //        //
 //        html +="<button type='button' class='btn btn-primary' onclick='filter_manager.zoom_layer(\""+resource[filter_manager['bounds_col']]+"\")'>"+LANG.RESULT.ZOOM+"</button>"
 //        if(download_link){
@@ -188,6 +190,7 @@ class Layer_Manager {
 //        if ($.inArray(layer.type,$this.table_types)>-1){
 //            html +="<button type='button' class='btn btn-primary' onclick='layer_manager.show_table_data(\""+id+"\")'><i class='bi bi-table'></i></button>"
 //        }
+
 
         if (typeof(o.color)!="undefined"){
           html += "<div class='color_box'><input type='text' id='"+id+"_line_color' value='"+o.color+"'/><br/><label for='"+id+"_line_color' >"+LANG.MAP.OUTLINE_COLOR+"</label></div>"
@@ -213,8 +216,27 @@ class Layer_Manager {
         this.make_slider(id+'_slider',100)
 
   }
+  add_layer_toggle(_this){
+    var ext ="_toggle";// just needed for character count
+    var id = $(_this).attr('id')
+    var _id = id.substring(0,id.length-ext.length)
+    var layer =  this.get_layer_obj(_id)
+     if($(_this).html()==LANG.RESULT.REMOVE){
+        this.map.removeLayer(layer.layer_obj)
+        $(_this).html(LANG.RESULT.ADD)
+    }else{
+        $("."+_id+"_toggle").addClass("progress-bar-striped progress-bar-animated")
+        try{
+         this.map.addLayer(layer.layer_obj)
+         }catch(e){
+            console.log("try and recreate the layer")
+
+         }
+    }
+
+  }
   show_details(_resource_id){
-   filter_manager.select_item(_resource_id)
+    filter_manager.select_item(_resource_id)
 
     analytics_manager.track_event("side_bar","show_details","layer_id",_resource_id)
   }
@@ -237,7 +259,6 @@ class Layer_Manager {
         this.side_by_side.setRightLayers([])
     }
     var layer_obj =  this.get_layer_obj(_resource_id).layer_obj
-    console.log("split with",layer_obj)
     if (side=="right"){
 
         if (this.split_right_layers.length>0){
@@ -416,7 +437,6 @@ class Layer_Manager {
 
   add_layer(_resource_id,_type,_drawing_info,url,_z,item_ids){
 
-    console_log("Adding",_resource_id,url,_z,_drawing_info,_type)
     var $this=this
     var update_url=false
     // create layer at pane
@@ -434,12 +454,11 @@ class Layer_Manager {
           _z= this.layers.length
           update_url=true
     }
-    console_log("created pane",this.map.getPane(_resource_id).style)
+
     this.map.getPane(_resource_id).style.zIndex = _z+100;
 
     var service_method = this.get_service_method(_type)
-    console.log("service_method",service_method,_type)
-    console.log(layer_options.url)
+
     //todo attempt overcoming cors
 //     layer_options.url='http://localhost:8000/sr/'+encodeURIComponent(layer_options.url)
      //check for a legend
@@ -535,7 +554,7 @@ class Layer_Manager {
 
       }else{
         console.log("Passed in",layer_options)/*filter_manager.get_bounds(resource.locn_geometry),*/ // pass in the bounds
-       var layer_obj =  L[service_method._class][service_method._method](layer_options).addTo(this.map);
+       var layer_obj =  L[service_method._class][service_method._method](layer_options)//.addTo(this.map);
         console.log(layer_obj)
       }
 
@@ -594,8 +613,6 @@ class Layer_Manager {
 
      layer_obj.on('load', function (e) {
 
-        console.log("LOAD complete.............######",this)
-        console.log(this.layer_id,$this.get_layer_obj(this.layer_id))
         $this.layer_load_complete(this);
 
         //$this.show_bounds($this.get_layer_obj(this.layer_id).layer_obj.getBounds())
@@ -740,9 +757,9 @@ class Layer_Manager {
   }
   layer_load_complete(elm){
 
-    console.log("layer_load_complete",elm.layer_id,  $("."+elm.layer_id+"_toggle"))
     $("."+elm.layer_id+"_toggle").removeClass("progress-bar-striped progress-bar-animated")
     $("."+elm.layer_id+"_toggle").text(LANG.RESULT.REMOVE)
+    console.log($(elm.layer_id,"."+elm.layer_id+"_toggle"))
     // update the maps ta
     this.update_layer_count();
     console_log("Add download link")

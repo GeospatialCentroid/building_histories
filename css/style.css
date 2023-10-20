@@ -14,6 +14,15 @@ body {
 font-weight: bold;
 font-size: 18px;
 }
+.float-right{
+    float:right;
+}
+.inline{
+display:inline;
+}
+#info_but{
+    display:none;
+}
 
 #map_wrapper{
     float:left;
@@ -239,10 +248,14 @@ a.disabled {
     bottom:0px;
     left:0px;
     border: 1px solid #ccc;
+    color:black;
 }
 #map_panel_wrapper .btn-close{
      float:right;
      padding:5px
+}
+.leaflet-control-layers{
+    margin-bottom:35px !important;
 }
 
 #map_panel_scroll{
@@ -281,7 +294,7 @@ a.disabled {
 
   position:absolute;
 
-margin-top:30px;
+margin-top:5px;
 margin-left:-15px;
 
 }
@@ -496,6 +509,7 @@ margin: 0 3px 3px 3px;
 padding: 0.4em;
 padding-left: 1.5em;
 padding-right: 1.5em;
+padding-top:10px;
 height: 50px;
 }
 
@@ -530,7 +544,7 @@ position: absolute;
 .slider_box{
     float:right;
     text-align: center;
-     margin-top:-20px;
+    margin-top:-5px;
 
 }
 .lil label{
@@ -723,7 +737,7 @@ position: absolute;
     width:48px;
     display:inline-table;
     margin-right:5px;
-    margin-top:-15px;
+
     float:right;
 }
 .split_left{

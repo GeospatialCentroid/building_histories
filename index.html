@@ -127,9 +127,12 @@
          </div>
 </div>
 <div class="page vh-100">
-    <div id="header" class="m-2  d-flex justify-content-between" >
+    <div id="header" class="m-2  w-100" >
         <span class="header_text">CSU Building Histories</span>
-            <div id="git_but" ><a class="btn btn-default" href="https://github.com/geospatialcentroid/building_histories" target="git" data-toggle="tooltip" title="Go to Git Repo" data-original-title="Go to git Repo"><i class="bi bi-github"></i></a></div>
+         <div id="git_but" class="float-right"><a class="btn btn-default" href="https://github.com/geospatialcentroid/building_histories" target="git" data-toggle="tooltip" title="Go to Git Repo" data-original-title="Go to git Repo"><i class="bi bi-github"></i></a></div>
+
+        <div id="info_but" class="float-right"><a class="btn btn-default" href="#"  title="info" data-original-title="info"><i class="bi bi-info-circle"></i></a></div>
+
 
 
    </div>
@@ -312,17 +315,16 @@
     <div class="modal-content">
       <div class="modal-header">
           <div class="modal-body" id="disclaimer_heading"></div>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
       </div>
       <div class="modal-body" id="disclaimer_text">
 
       </div>
       <div class="modal-footer">
           <span><label id="disclaimer_dont_show_again" for="disclaimer_dont_show_again_checkbox"></label> <input id="disclaimer_dont_show_again_checkbox" type="checkbox" value=""/></span>
-        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="disclaimer_disagree"></button>
-        <button type="button" class="btn btn-primary" id="disclaimer_agree"></button>
+<!--        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="disclaimer_disagree"></button>-->
+<!--        <button type="button" class="btn btn-primary" id="disclaimer_agree"></button>-->
       </div>
     </div>
   </div>
