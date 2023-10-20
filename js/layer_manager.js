@@ -381,11 +381,11 @@ class Layer_Manager {
   }
 
   get_layer_obj(_resource_id){
-        console.log(this.layers)
+        //console.log(this.layers)
       for(var i =0;i<this.layers.length;i++){
             var temp_layer = this.layers[i]
 
-            console.log(temp_layer,"VS",_resource_id)
+            //console.log(temp_layer,"VS",_resource_id)
             if (temp_layer.id==_resource_id){
                 return temp_layer
 

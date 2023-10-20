@@ -19,6 +19,7 @@ font-size: 18px;
     float:left;
 
      color: #9c27b0;
+     position: relative;
 }
 .map{
     float:left;
@@ -235,6 +236,13 @@ a.disabled {
     clip-path: polygon(0 0, 600px 0%, 600px 100%, 0% 100%);
     z-index:2000000;
     position:absolute;
+    bottom:0px;
+    left:0px;
+    border: 1px solid #ccc;
+}
+#map_panel_wrapper .btn-close{
+     float:right;
+     padding:5px
 }
 
 #map_panel_scroll{
@@ -469,6 +477,13 @@ margin-left:-15px;
 
 .popup  tr:nth-child(even) {background: rgba(51, 181, 229, 0.4);}
 .popup  tr:nth-child(odd) {background: #fff}
+
+.td_top{
+    vertical-align:top
+}
+.td_bold{
+     font-weight: bold;
+}
 
 #sortable_layers {
 list-style-type: none;

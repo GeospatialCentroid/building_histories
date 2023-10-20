@@ -176,8 +176,11 @@ class Section_Manager {
                     var filter_cols=section.filter_cols.split(",").map(function(item) {
                           return item.trim();
                         });
+                    var separated_cols=section.separated_cols.split(",").map(function(item) {
+                          return item.trim();
+                        });
                     section.filter_cols=filter_cols
-                    this.update_geojson_properties(section.all_data,show_cols,section?.image_col)
+                    this.update_geojson_properties(section.all_data,show_cols,separated_cols,section?.image_col)
                     filter_manager.create_filter_values(section,section.all_data,filter_cols,section?.year_start_col,section?.year_end_col);
                 }
                 //console.log("second data",section.data[j].data,section.data[j][1])
@@ -239,21 +242,27 @@ class Section_Manager {
 
         }
     }
-    update_geojson_properties(all_data,show_cols,image_col){
+    update_geojson_properties(all_data,show_cols,separated_cols,image_col){
         // we really need the details stored in the properties
         for (var i=0;i<all_data.length;i++){
             var properties={}
 
             for (var j=0;j<show_cols.length;j++){
-                // inject all the properties form the geojson
-               properties[show_cols[j]]=  all_data[i][show_cols[j]]
+                 // inject all the properties form the geojson
+                 properties[show_cols[j]]=  all_data[i][show_cols[j]]
+                 for (var k=0;k<separated_cols.length;k++){
+                    if(show_cols[j]==separated_cols[k]){
+                        properties[show_cols[j]] = properties[show_cols[j]].split(";").map(function(item) {
+                          return item.trim();
+                        });
+                    }
+                 }
+
             }
             // and if there is an image col
             if(image_col){
                 //first split on ;
-                var images = properties[image_col].split(";").map(function(item) {
-                  return item.trim();
-                });
+                var images = properties[image_col]
                 var html_images =""
                 for(var img in images){
                    html_images+=String(images[img]).image_text()

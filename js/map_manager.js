@@ -101,6 +101,15 @@ class Map_Manager {
 //     });
      //this.map.addControl(drawControl);
 
+     var layer_control = L.control.layers(null, {}, {position: 'bottomleft'}).addTo(this.map)
+     $(".leaflet-control-layers").on( "click mouseover", function() {
+
+        $("#map_panel_wrapper").show();
+     });
+     $(".btn-close").on( "click", function() {
+        $("#map_panel_wrapper").hide();
+     });
+
      this.add_legend()
 
      $this=this;
@@ -407,10 +416,20 @@ class Map_Manager {
 
          for (var p in props){
             if (p !='_id'){
-            var val = String(props[p]).hyper_text()
-            if(val!=""){
-                 html+="<tr><td>"+p+"</td><td>"+val+"</td></tr>"
-            }
+                var val = String(props[p]).hyper_text()
+                //if we have an array add line breaks between values
+                if($.isArray(props[p])){
+                     val =""
+                    for (var v in props[p]){
+                        if(props[p][v]!=""){
+                            val += String(props[p][v]).hyper_text()+"<br/>"
+                        }
+                    }
+                }
+
+                if(val!=""){
+                     html+="<tr><td  class='td_top'>"+p+"</td><td class='td_bold'>"+val+"</td></tr>"
+                }
 
             }
          }
