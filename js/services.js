@@ -20,7 +20,7 @@ var services = [
 },
 {
 "name": "tms",
-"ref": "https://www.ogc.org/standards/wmts",
+"ref": "tms",
 "_class": "tileLayer",
 "_method": ""
 },

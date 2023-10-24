@@ -119,7 +119,8 @@ class Section_Manager {
         console.log(section_manager.json_data)
 
             //$this.layer_control.addOverlay(layer, data[i].name);
-
+         section_manager.overlay_count=data.length
+         section_manager.overlay_current=_slot
          for (var i=0; i<data.length;i++){
             //inject the loaded data
             var slot=_slot+i//add i to treat each individually
@@ -127,10 +128,21 @@ class Section_Manager {
             section_manager.json_data[slot].all_data=data[i]
             section_manager.json_data[slot].all_data["title_col"]=data[i].name
             section_manager.json_data[slot].all_data["id"]="section_id_"+slot
-            layer_manager.toggle_layer("section_id_"+slot,"mapservice",false,data[i].URL)
-            //turn down Transparency
 
-            //$("#section_id_"+slot+"_slider").slider("value",0)
+         }
+         section_manager.toggle_overlay()
+    }
+    toggle_overlay(){
+        if(section_manager.overlay_current<=section_manager.overlay_count){
+          var obj = section_manager.json_data[section_manager.overlay_current].all_data
+          layer_manager.toggle_layer("section_id_"+section_manager.overlay_current,obj.type,false,obj.URL)
+           // increment the next overlay to minimize instantiation errors
+           section_manager.overlay_current++
+           // add a delay between the next overlay
+           setTimeout(() => {
+           console.log("loading next")
+             section_manager.toggle_overlay()
+           }, "1000");
          }
     }
     check_section_completion(data,slot){
@@ -181,7 +193,7 @@ class Section_Manager {
                 $(".overlay").fadeOut("slow", function () {
                     $(this).css({display:"none",'background-color':"none"});
                 });
-            },300);
+            },1200);
 
             $this.setup_interface()
         }
@@ -315,6 +327,7 @@ class Section_Manager {
                $("#section_id_0").trigger("click");
                 $("#arrow_0").trigger("click");
                  $("#nav_wrapper").hide();
+                         run_resize()
             }, "100");
 
        // }

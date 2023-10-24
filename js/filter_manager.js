@@ -652,6 +652,6 @@ class Filter_Manager {
                 scrollTop: 0
             }, 1000);
          $this.update_results_info(sorted_data.length)
-        run_resize()
+
     }
 }

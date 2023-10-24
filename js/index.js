@@ -241,11 +241,11 @@ function window_resize() {
            data_table_height= $("#data_table_wrapper").height()
         }
         var header_height=$("#header").outerHeight()+20;
-        var footer_height=$("#footer").outerHeight()
+        var footer_height=15//$("#footer").height()
         var window_height= $(window).outerHeight()
         var window_width= $(window).width()
         var minus_height=header_height+footer_height
-
+        console.log("CONTENT HEIGHT",window_height,minus_height,header_height,footer_height)
        $("#content").height(window_height-minus_height)
 
        $("#map_wrapper").height(window_height-minus_height-data_table_height)

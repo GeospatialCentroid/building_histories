@@ -458,10 +458,12 @@ margin-left:-15px;
 .popup .leaflet-popup-content-wrapper {
     background: #f7f7f7;
     max-height: 320px;
+
     overflow: auto;
 }
 .leaflet-popup-content-wrapper{
     width:300px;
+     min-height: 240px;
 }
 .popup_image{
      width:180px;
@@ -524,6 +526,7 @@ position: absolute;
     list-style-type: none;
     /* pad bottom to for color pallet*/
     /*height:240px;*/
+    margin-left:50px;
 }
 
 .highlight{

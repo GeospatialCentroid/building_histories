@@ -227,10 +227,13 @@ class Layer_Manager {
     }else{
         $("."+_id+"_toggle").addClass("progress-bar-striped progress-bar-animated")
         try{
-         this.map.addLayer(layer.layer_obj)
+            this.map.addLayer(layer.layer_obj)
          }catch(e){
-            console.log("try and recreate the layer")
 
+            // todo we need a better way to recreate this layer
+            $("#"+_id+"_drag").remove();
+            var match= section_manager.get_match(_id)
+            layer_manager.toggle_layer(_id,match.type,false,match.URL)
          }
     }
 
@@ -462,6 +465,7 @@ class Layer_Manager {
     //todo attempt overcoming cors
 //     layer_options.url='http://localhost:8000/sr/'+encodeURIComponent(layer_options.url)
      //check for a legend
+     console.log(service_method)
     if(service_method._method=="tiledMapLayer" || service_method._method=="dynamicMapLayer" ){
 
         // todo test tms
@@ -520,7 +524,7 @@ class Layer_Manager {
         //todo - get this from the service
         layer_options.maxZoom= 21
         console_log(service_method,service_method._class,service_method._method)
-        var layer_obj =  L[service_method._class](layer_options.url,layer_options).addTo(this.map);
+        var layer_obj =  L[service_method._class](layer_options.url,layer_options)//.addTo(this.map);
 
     }else if(service_method?._method && service_method._method.indexOf(".")>-1){
         var method_parts=service_method._method.split(".")
