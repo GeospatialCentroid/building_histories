@@ -221,7 +221,7 @@ class Section_Manager {
                           return item.trim();
                         });
                     section.filter_cols=filter_cols
-                    this.update_geojson_properties(section.all_data,show_cols,separated_cols,section?.image_col)
+                    this.update_geojson_properties(section.all_data,show_cols,separated_cols,section?.image_col,section?.color_col)
                     filter_manager.create_filter_values(section,section.all_data,filter_cols,section?.year_start_col,section?.year_end_col);
                 }
                 //console.log("second data",section.data[j].data,section.data[j][1])
@@ -264,15 +264,7 @@ class Section_Manager {
 
 
                     }else{
-//                        console.log(  all_data[i].feature)
-//                        if(  all_data[i].feature.features[0].geometry.type=="Polygon"){
-//                            //change the type the first time
-//                            all_data[i].feature.features[0].geometry.type="MultiPolygon"
-//                            //warp in array
-//                           all_data[i].feature.features[0].geometry.coordinates=[all_data[i].feature.features[0].geometry.coordinates]
-//                        }
                         all_data[i].feature.features[0].geometry.coordinates.push(data_to_join.features[j].geometry.coordinates)
-                        console.log("we have more to add",data_to_join.features[j])
 
                     }
 
@@ -283,7 +275,7 @@ class Section_Manager {
 
         }
     }
-    update_geojson_properties(all_data,show_cols,separated_cols,image_col){
+    update_geojson_properties(all_data,show_cols,separated_cols,image_col,color_col){
         // we really need the details stored in the properties
         for (var i=0;i<all_data.length;i++){
             var properties={}
@@ -310,6 +302,10 @@ class Section_Manager {
                 }
                 properties[image_col]=html_images
                }
+             if(color_col){
+                properties['color']=all_data[i][color_col]
+             }
+
             if(all_data[i]?.feature){
                 all_data[i].feature.features[0].properties=properties
             }

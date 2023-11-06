@@ -249,7 +249,6 @@ class Map_Manager {
             }
 
         }
-        console.log(this.selected_layer_id,layer_manager.get_layer_obj(this.selected_layer_id))
         return layer_manager.get_layer_obj(this.selected_layer_id);
     }
     map_click_event(lat_lng,no_page){
@@ -415,7 +414,7 @@ class Map_Manager {
         var html=''
 
          for (var p in props){
-            if (p !='_id'){
+            if (p !='_id' && p !='color'){
                 var val = String(props[p]).hyper_text()
                 //if we have an array add line breaks between values
                 if($.isArray(props[p])){

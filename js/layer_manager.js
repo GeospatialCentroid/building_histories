@@ -701,14 +701,14 @@ class Layer_Manager {
     var style = {}
 
     if(layer_obj.layer_options){
-        style=layer_obj.layer_options
+        style= jQuery.extend(true, {}, layer_obj.layer_options);
+    }
+    if(feature?.features[0]?.properties?.color && feature.features[0].properties.color!=""){
+        style.fillColor= feature.features[0].properties.color
+        style.color= feature.features[0].properties.color
+        // style.opacity= 0
     }
 
-    if(feature.properties?.color){
-        style.fillColor= feature.properties.color
-        style.color= feature.properties.color
-         style.opacity= 0
-    }
 
     feature.id= feature.features[0].id
     var geo =L.geoJSON(feature, {pane: _resource_id, style: style,
