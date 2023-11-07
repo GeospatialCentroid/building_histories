@@ -322,6 +322,11 @@ class Section_Manager {
             setTimeout(() => {
                $("#section_id_0").trigger("click");
                 $("#arrow_0").trigger("click");
+               if(this.json_data[0]?.legend){
+
+                layer_manager.create_legend(JSON.parse(this.json_data[0]?.legend),"section_id_1")
+               }
+                //
                  $("#nav_wrapper").hide();
                          run_resize()
             }, "100");

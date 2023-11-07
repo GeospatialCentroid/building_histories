@@ -46,7 +46,13 @@ function initialize_interface(){
     elm_wrap:"data_table_wrapper",
           elm:"data_table"})
     table_manager.init()
-   setup_map();
+     setup_map();
+     //create a flag to determine if we should zoom map based on last view
+    var has_earth_param=false
+
+    if (usp?.get && usp.get('e')!=null){
+         has_earth_param=true
+    }
 
     //setup_filters()
     analytics_manager = new Analytics_Manager();
@@ -55,7 +61,8 @@ function initialize_interface(){
     filter_manager = new Filter_Manager({
     section_manager:section_manager,
     place_url:'https://nominatim.openstreetmap.org/search?format=json',
-    title_col:"title_col"//universal location for a title
+    title_col:"title_col",//universal location for a title
+    has_earth_param:has_earth_param
     });
     section_manager.init();
 }

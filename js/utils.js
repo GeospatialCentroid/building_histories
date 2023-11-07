@@ -62,7 +62,12 @@ String.prototype.clip_text=function(limit){
 String.prototype.hyper_text=function(){
 
     if(this.startsWith("http")){
-        return "<a href='"+this.toString()+"' target='_blank'>"+this.toString()+"</a>"
+        var str=this.toString()
+        //if url is really long take beginning 10 and end 3 characters
+        if(this.length>30){
+            str=this.substring(0,24)+"..."+this.substring(this.length-3,this.length)
+        }
+        return "<a href='"+this.toString()+"' target='_blank'>"+str+"</a>"
     }
     return this
 }

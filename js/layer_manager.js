@@ -116,37 +116,7 @@ class Layer_Manager {
      }
 
   }
-//  drawing_info_include(data,resource){
-//    if(data?.drawingInfo){
-//       resource.drawing_info = data.drawingInfo
-//        layer_manager.toggle_layer(resource.id)
-//    }
-//
-//  }
-// set_usable_links(resource){
-//    //find the link in the array of links
-//    resource.usable_links=[]
-//    for (var l in filter_manager["viz_col"]){
-//        //check if it's an acceptable format
-//        if(resource[filter_manager["viz_col"][l]]!=""){
-//            var link = resource[filter_manager["viz_col"][l]]
-//            for (var s in services){
-//                 // look through the second slot of each type
-//                 if(typeof(link) !="undefined" && services[s]?.pattern){
-//                     for (var p in services[s].pattern){
-//
-//                        if(link.indexOf(services[s].pattern[p])>-1){
-//                             resource.usable_links.push([link,services[s]])
-//                        }
-//                     }
-//              }
-//            }
-//
-//
-//
-//        }
-//    }
-//  }
+
     add_to_map_tab(_resource_id,_z){
         var $this = this;
         // use this.layers[] for reference since filter_manager can change with filter response.
@@ -1146,10 +1116,16 @@ class Layer_Manager {
 
                 for (var j=0;j<l['legend'].length;j++){
 
-                    var label =  l['legend'][j].label
-                     var id =  l['legend'][j].url
+                   var label =  l['legend'][j].label.clip_text(16)
+                  var id =  l['legend'][j].url
                    html+='<label>'
-                   html+='<img alt="'+label+'" src="data:image/png;base64,'+l['legend'][j].imageData+'" border="0" width="20" height="20" class="legend_symbol">'
+                   if(l['legend'][j]?.imageData){
+                        html+='<img alt="'+label+'" src="data:image/png;base64,'+l['legend'][j].imageData+'" border="0" width="20" height="20" class="legend_symbol">'
+                   }else if(l['legend'][j]?.color){
+                        var color=l['legend'][j]?.color
+
+                        html+='<div alt="'+label+'" style="border-width: 1px;opacity: 0.5;width:20px;height:20px;background:'+color+';border:'+color+';"  class="legend_symbol"></div>'
+                   }
                    html+='<span class="legend_label">'+label+'</span></label><br/>'
 
                 }
