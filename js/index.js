@@ -256,7 +256,8 @@ function window_resize() {
        $("#content").height(window_height-minus_height)
 
        $("#map_wrapper").height(window_height-minus_height-data_table_height)
-       var scroll_height=window_height-minus_height-$("#side_header").outerHeight()-$("#tabs").outerHeight()-$("#nav_wrapper").outerHeight()
+       var scroll_height=window_height-minus_height-$("#side_header").outerHeight()
+       //-$("#tabs").outerHeight()-$("#nav_wrapper").outerHeight()
        $("#panels").height(scroll_height)
        $(".panel").height(scroll_height)
 
@@ -311,7 +312,7 @@ function window_resize() {
             section_manager.slide_position(section_manager.panel_name)
         }
 
-        $("#result_wrapper").height(scroll_height-$("#filter_area").height())
+        $("#result_wrapper").css({"max-height":scroll_height-$("#filter_area").height()})
 
  }
  function save_params(){

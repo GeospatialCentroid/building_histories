@@ -112,6 +112,8 @@ class Section_Manager {
         $("#info_but").on("click", function(){ $('#disclaimer').modal('show');})
         $("#info_but").show()
 
+        $("#disclaimer_close").on("click", function(){ $('#disclaimer').modal('hide');})
+
     }
     add_overlay(_data,_slot){
 

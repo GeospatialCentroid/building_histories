@@ -176,7 +176,7 @@
                           <i class="bi bi-x-lg"></i>
                         </button>
                       <div class="input-group-append">
-                        <button class="btn  btn-primary" type="button" id="search_but"> <i class="bi bi-search"></i></button>
+                        <button class="btn  btn-primary" type="button" id="search_but" title="Search button" aria-label="Search button"> <i class="bi bi-search"></i></button>
                       </div>
                     </div>
 
@@ -327,13 +327,18 @@
          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
       </div>
-      <div class="modal-body" id="disclaimer_text">
+      <div class="modal-body">
+          <span id="disclaimer_text">
 
+          </span>
+        <button type="button" class="btn btn-primary" id="disclaimer_close" data-dismiss="modal">Close</button>
       </div>
+
       <div class="modal-footer">
           <span><label id="disclaimer_dont_show_again" for="disclaimer_dont_show_again_checkbox"></label> <input id="disclaimer_dont_show_again_checkbox" type="checkbox" value=""/></span>
 <!--        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="disclaimer_disagree"></button>-->
 <!--        <button type="button" class="btn btn-primary" id="disclaimer_agree"></button>-->
+
       </div>
     </div>
   </div>
