@@ -312,7 +312,7 @@ function window_resize() {
             section_manager.slide_position(section_manager.panel_name)
         }
 
-        $("#result_wrapper").css({"max-height":scroll_height-$("#filter_area").height()})
+        $("#result_wrapper").css({"height":scroll_height-$("#filter_area").height()})
 
  }
  function save_params(){
