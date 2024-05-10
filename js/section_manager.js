@@ -324,7 +324,7 @@ class Section_Manager {
             setTimeout(() => {
                $("#section_id_0").trigger("click");
                 $("#arrow_0").trigger("click");
-
+                $("#sections_view").hide();
                 setTimeout(() => {$("#panels").show();} , "500");
                if(this.json_data[0]?.legend){
 
